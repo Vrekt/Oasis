@@ -9,6 +9,8 @@ Currently there is only a few things implemented
   - Client > Server create lobby
   - Disconnects
   
+Currently, by default client tries to connect to "localhost:8090"
+  
 # Whats planned
   - Playing levels with multiple people
   - Lobby support
