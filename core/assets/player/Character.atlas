@@ -1,0 +1,90 @@
+
+Character.png
+size: 64,256
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+walking_down
+  rotate: false
+  xy: 29, 204
+  size: 28, 34
+  orig: 28, 34
+  offset: 0, 0
+  index: 2
+walking_down
+  rotate: false
+  xy: 0, 136
+  size: 28, 34
+  orig: 28, 34
+  offset: 0, 0
+  index: 1
+walking_down_idle
+  rotate: false
+  xy: 28, 170
+  size: 28, 34
+  orig: 28, 34
+  offset: 0, 0
+  index: -1
+walking_left
+  rotate: false
+  xy: 28, 136
+  size: 24, 34
+  orig: 24, 34
+  offset: 0, 0
+  index: 2
+walking_left
+  rotate: false
+  xy: 0, 34
+  size: 24, 34
+  orig: 24, 34
+  offset: 0, 0
+  index: 1
+walking_left_idle
+  rotate: false
+  xy: 0, 0
+  size: 24, 34
+  orig: 24, 34
+  offset: 0, 0
+  index: -1
+walking_right
+  rotate: false
+  xy: 0, 68
+  size: 24, 34
+  orig: 24, 34
+  offset: 0, 0
+  index: 2
+walking_right
+  rotate: false
+  xy: 24, 68
+  size: 24, 34
+  orig: 24, 34
+  offset: 0, 0
+  index: 1
+walking_right_idle
+  rotate: false
+  xy: 28, 102
+  size: 24, 34
+  orig: 24, 34
+  offset: 0, 0
+  index: -1
+walking_up
+  rotate: false
+  xy: 0, 204
+  size: 29, 34
+  orig: 29, 34
+  offset: 0, 0
+  index: 1
+walking_up
+  rotate: false
+  xy: 0, 102
+  size: 28, 34
+  orig: 28, 34
+  offset: 0, 0
+  index: 2
+walking_up_idle
+  rotate: false
+  xy: 0, 170
+  size: 28, 34
+  orig: 28, 34
+  offset: 0, 0
+  index: -1
