@@ -7,6 +7,9 @@ Firstly, the project name is just a placeholder, it will probably change later.
 Currently there is only a few things implemented
   - Server/Client handshake
   - Client > Server create lobby
+  - Client > Server join lobby
+  - Client > Server send velocity inputs
+  - Server > Client update velocity inputs
   - Disconnects
   
 Currently, by default client tries to connect to "localhost:8090"
