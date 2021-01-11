@@ -5,26 +5,23 @@ import protocol.packet.Packet;
 import protocol.packet.handlers.ServerPacketHandler;
 
 /**
- * A response to {@link protocol.packet.client.ClientHandshake}
+ * Sent by the server to remove a player client side
  */
-public final class ServerHandshakeResponse extends Packet<ServerPacketHandler> {
+public final class ServerRemovePlayer extends Packet {
+
+    public static final int PID = 8;
 
     /**
-     * PID
-     */
-    public static final int PID = 2;
-
-    /**
-     * The entity ID
+     * entity ID
      */
     private int entityId;
 
     /**
      * Initialize
      *
-     * @param entityId the entity ID
+     * @param entityId ID to remove
      */
-    public ServerHandshakeResponse(int entityId) {
+    public ServerRemovePlayer(int entityId) {
         this.entityId = entityId;
     }
 
@@ -34,13 +31,13 @@ public final class ServerHandshakeResponse extends Packet<ServerPacketHandler> {
      * @param buffer  buffer
      * @param handler handler
      */
-    public ServerHandshakeResponse(ByteBuf buffer, ServerPacketHandler handler) {
+    public ServerRemovePlayer(ByteBuf buffer, ServerPacketHandler handler) {
         super(buffer);
-        handler.handleHandshakeResponse(this);
+        handler.handleRemovePlayer(this);
     }
 
     /**
-     * @return the entity ID
+     * @return the ID
      */
     public int entityId() {
         return entityId;

@@ -1,22 +1,28 @@
 package server.game;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.internal.ThreadLocalRandom;
 import protocol.Protocol;
+import protocol.codec.ProtocolPacketEncoder;
 import protocol.packet.Packet;
-import protocol.packet.client.ClientCreateLobbyRequest;
+import protocol.packet.client.ClientCreateLobby;
 import protocol.packet.client.ClientHandshake;
+import protocol.packet.client.ClientJoinLobby;
+import protocol.packet.client.ClientVelocity;
 import protocol.packet.handlers.ClientPacketHandler;
-import protocol.packet.server.ServerCreateLobbyResponse;
-import protocol.packet.server.ServerDisconnect;
-import protocol.packet.server.ServerHandshakeResponse;
+import protocol.packet.server.ServerCreateLobbyReply;
+import protocol.packet.server.ServerHandshakeReply;
+import protocol.packet.server.ServerJoinLobbyReply;
+import protocol.packet.server.ServerLoadLevel;
 import server.game.entity.player.EntityPlayer;
-import server.game.level.Level;
-import server.game.lobby.impl.Lobby;
+import server.game.lobby.Lobby;
+import server.netty.codec.ClientProtocolPacketDecoder;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The game server
@@ -29,29 +35,35 @@ public final class GameServer {
     public static final int GAME_VERSION = 10;
 
     /**
-     * Amount to split the level instances by for multi threading.
+     * Max lobbies per {@link GameServer} instance
+     * {or} per dedicated server
      */
-    private final int threadLevelChunkingAmount = 50;
+    private final int maxLobbiesPerInstance = 100;
 
     /**
-     * Max dungeons allowed for this server.
-     */
-    private final int maxLevelInstancesAllowed = 100;
-
-    /**
-     * Max lobby instances allowed for this server.
-     */
-    private final int maxLobbyInstancesAllowed = 100;
-
-    /**
-     * A map of all active levels
-     */
-    private final Map<Integer, Level> levels = new ConcurrentHashMap<>();
-
-    /**
-     * A map of all lobbies
+     * Map of lobbies in this server
      */
     private final Map<Integer, Lobby> lobbies = new ConcurrentHashMap<>();
+
+    public GameServer() {
+        // tick lobbies every 35 milliseconds
+        // TODO: Maybe a better way
+        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this::tickLobbies, 1000, 50, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Tick lobbies
+     */
+    private void tickLobbies() {
+        lobbies.values().forEach(Lobby::tick);
+    }
+
+    /**
+     * Tick actual games
+     */
+    private void tickGames() {
+
+    }
 
     /**
      * Create a new session
@@ -64,23 +76,12 @@ public final class GameServer {
     }
 
     /**
-     * Assign a hopefully unique entity ID.
-     *
-     * @return the unique entity ID.
+     * Assign a unique lobby ID.
+     * TODO: For now 9999
      */
-    public int assignUniqueEntityId() {
-        final int modifier = (levels.size() + 1) + ThreadLocalRandom.current().nextInt(100, 900);
-        return ThreadLocalRandom.current().nextInt(123456, 999999) + modifier;
-    }
-
-    /**
-     * Assign a hopefully unique lobby ID.
-     *
-     * @return the unique lobby ID.
-     */
-    public int assignUniqueLobbyId() {
-        final int modifier = (lobbies.size() + 1) + ThreadLocalRandom.current().nextInt(100, 900);
-        return ThreadLocalRandom.current().nextInt(123456, 900000) + modifier;
+    private int assignUniqueLobbyId() {
+        return 9999;
+        // return lobbies.size() + 1 + ThreadLocalRandom.current().nextInt(123456, 999000);
     }
 
     /**
@@ -99,6 +100,11 @@ public final class GameServer {
         private EntityPlayer player;
 
         /**
+         * Lobby in
+         */
+        private Lobby lobbyIn;
+
+        /**
          * Initialize
          *
          * @param sessionChannel the session channel.
@@ -109,46 +115,96 @@ public final class GameServer {
 
         @Override
         public void handleHandshake(ClientHandshake packet) {
-            // TODO: Some kind of username validation.
             if (packet.gameVersion() != GAME_VERSION) {
-                sessionChannel.writeAndFlush(new ServerDisconnect("Game version out of date!"));
-                handleDisconnect();
+                send(new ServerHandshakeReply(false, "Game version out of date!"));
+                close();
+
+                return;
             } else if (packet.protocolVersion() != Protocol.PROTOCOL_VERSION) {
-                sessionChannel.writeAndFlush(new ServerDisconnect("Protocol version out of date!"));
-                handleDisconnect();
+                send(new ServerHandshakeReply(false, "Protocol version out of date!"));
+                close();
+
+                return;
             }
 
-            final int entityId = assignUniqueEntityId();
-            player = new EntityPlayer(packet.username(), entityId, this::send);
-            sessionChannel.writeAndFlush(new ServerHandshakeResponse(entityId));
+            send(new ServerHandshakeReply(true, ""));
         }
 
         @Override
-        public void handleCreateLobbyRequest(ClientCreateLobbyRequest request) {
-            if (lobbies.size() > maxLobbyInstancesAllowed) {
-                // TODO: Just for now, obviously in the future
-                // TODO: We want to re-reroute to a less full server or something
-                sessionChannel.writeAndFlush(new ServerCreateLobbyResponse(false, "Too many lobbies in server."));
+        public void handleCreateLobby(ClientCreateLobby createLobby) {
+            if (lobbies.size() >= maxLobbiesPerInstance) {
+                send(new ServerCreateLobbyReply(false, "Too many lobby instances in server."));
             } else {
-                // assign a new lobby.
+                // create a new lobby and assign IDs
                 final int lobbyId = assignUniqueLobbyId();
-                final Lobby lobby = Lobby.create(lobbyId);
+                final Lobby lobby = new Lobby(lobbyId);
                 lobbies.put(lobbyId, lobby);
 
-                // send them the new lobby.
-                sessionChannel.writeAndFlush(new ServerCreateLobbyResponse(lobbyId));
+                lobbyIn = lobby;
+
+                final int entityId = lobby.assignUniqueEntityId();
+
+                // create the player and spawn them
+                player = new EntityPlayer(createLobby.username(), entityId, this::send);
+                player.location().set(420, 544);
+
+                lobby.spawnPlayerInLobby(player);
+
+                // send them reply
+                send(new ServerLoadLevel("PreLobby"));
+                send(new ServerCreateLobbyReply(lobbyId, entityId));
             }
+        }
+
+        @Override
+        public void handleJoinLobby(ClientJoinLobby joinLobby) {
+            final int lobbyId = joinLobby.lobbyId();
+            final Lobby lobby = lobbies.get(lobbyId);
+            if (lobby == null) {
+                send(new ServerJoinLobbyReply(false, "Lobby does not exist."));
+            } else {
+                lobbyIn = lobby;
+
+                // send they joined the lobby
+                final int entityId = lobby.assignUniqueEntityId();
+                send(new ServerLoadLevel("PreLobby"));
+                send(new ServerJoinLobbyReply(lobbyId, entityId));
+
+                // initialize a new player and spawn them.
+                player = new EntityPlayer(joinLobby.username(), entityId, this::send);
+                player.location().set(420, 544);
+
+                lobby.spawnPlayerInLobby(player);
+            }
+        }
+
+        @Override
+        public void handleVelocity(ClientVelocity velocity) {
+            if (lobbyIn != null)
+                lobbyIn.onPlayerVelocity(player, velocity.velocityX(), velocity.velocityY(), velocity.rotationIndex());
+        }
+
+        @Override
+        public void handleLevelLoaded() {
+            if (lobbyIn != null) lobbyIn.onPlayerLoaded(player);
         }
 
         @Override
         public void handleDisconnect() {
-            // close and remove.
             if (player != null) {
-                // TODO: Dispose
+                if (lobbyIn != null) {
+                    lobbyIn.removePlayer(player.entityId());
+                    lobbyIn = null;
+                }
             }
 
-            sessionChannel.pipeline().remove(this);
-            sessionChannel.close();
+            player = null;
+            close();
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            handleDisconnect();
         }
 
         /**
@@ -156,8 +212,18 @@ public final class GameServer {
          *
          * @param packet the packet
          */
-        private void send(Packet<?> packet) {
+        private void send(Packet packet) {
             sessionChannel.writeAndFlush(packet);
+        }
+
+        /**
+         * Close
+         */
+        private void close() {
+            sessionChannel.pipeline().remove(ClientProtocolPacketDecoder.class);
+            sessionChannel.pipeline().remove(ProtocolPacketEncoder.class);
+            sessionChannel.pipeline().remove(this);
+            sessionChannel.close();
         }
 
     }

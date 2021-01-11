@@ -1,12 +1,18 @@
 package me.vrekt.oasis;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.utils.Disposable;
-import me.vrekt.oasis.entity.player.PlayerController;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
-import me.vrekt.oasis.level.LevelManager;
+import me.vrekt.oasis.level.Level;
+import me.vrekt.oasis.level.lobby.PreLobbyLevel;
+import me.vrekt.oasis.level.world.LevelWorld;
 import me.vrekt.oasis.network.NetworkHandler;
 import me.vrekt.oasis.screen.MainMenuScreen;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Handles the game.
@@ -17,11 +23,6 @@ public final class Oasis implements Disposable {
      * Singleton
      */
     private static Oasis thisInstance;
-
-    /**
-     * The tag.
-     */
-    public static final String TAG = "Oasis";
 
     /**
      * The game version
@@ -39,19 +40,24 @@ public final class Oasis implements Disposable {
     private final NetworkHandler networkHandler;
 
     /**
-     * The level manager
-     */
-    private final LevelManager levelManager;
-
-    /**
      * The player
      */
     private final LocalEntityPlayer thePlayer;
 
     /**
-     * The default controller for any player
+     * Asset manager
      */
-    private final PlayerController controller;
+    private final AssetManager assetManager;
+
+    /**
+     * Levels
+     */
+    private final Map<String, Level> levels = new HashMap<>();
+
+    /**
+     * The current level.
+     */
+    private Level level;
 
     /**
      * Initialize the game
@@ -60,14 +66,24 @@ public final class Oasis implements Disposable {
         if (thisInstance != null) throw new UnsupportedOperationException();
         thisInstance = this;
 
-        thePlayer = new LocalEntityPlayer();
-
-        mainMenu = new MainMenuScreen();
         networkHandler = new NetworkHandler();
-        levelManager = new LevelManager();
-        controller = new PlayerController();
+        thePlayer = new LocalEntityPlayer();
+        mainMenu = new MainMenuScreen();
+
+        assetManager = new AssetManager();
+        assetManager.load("player/Character.atlas", TextureAtlas.class);
+        assetManager.finishLoading();
+
+        initializeLevels();
 
         adapter.setScreen(mainMenu);
+    }
+
+    /**
+     * Initialize levels
+     */
+    private void initializeLevels() {
+        levels.put("PreLobby", new PreLobbyLevel());
     }
 
     /**
@@ -85,13 +101,6 @@ public final class Oasis implements Disposable {
     }
 
     /**
-     * @return the level manager
-     */
-    public LevelManager levels() {
-        return levelManager;
-    }
-
-    /**
      * @return the local player
      */
     public LocalEntityPlayer thePlayer() {
@@ -99,54 +108,78 @@ public final class Oasis implements Disposable {
     }
 
     /**
-     * @return the controller
+     * @return the assets
      */
-    public PlayerController controller() {
-        return controller;
+    public AssetManager assets() {
+        return assetManager;
     }
 
     /**
-     * Set the player username
+     * Start a level
+     */
+    public void startLevel(String levelName) {
+        level = levels.get(levelName);
+        Gdx.app.postRunnable(() -> OasisGameAdapter.get().setScreen(level));
+    }
+
+    /**
+     * End the level
+     */
+    public void endLevel() {
+        showMainMenuAsync();
+        level.unload();
+        level.dispose();
+        level = null;
+    }
+
+    /**
+     * Show main menu
+     */
+    public void showMainMenuSync() {
+        OasisGameAdapter.get().setScreen(mainMenu);
+    }
+
+    /**
+     * Show main menu from another thread
+     */
+    public void showMainMenuAsync() {
+        Gdx.app.postRunnable(this::showMainMenuSync);
+    }
+
+    /**
+     * @return if we have a world.
+     */
+    public boolean hasWorld() {
+        return level != null && level.world() != null;
+    }
+
+    /**
+     * The current world we are in
      *
-     * @param username the username
+     * @return the world
      */
-    public void setPlayerUsername(String username) {
-        thePlayer.entityName(username);
+    public LevelWorld world() {
+        return level.world();
     }
 
     /**
-     * Network the local player
+     * Show a dialog
+     * Most commonly for errors
      *
-     * @param entityId the network entity ID.
+     * @param title   the title
+     * @param message the message
      */
-    public void networkLocalPlayer(int entityId) {
-        thePlayer.entityId(entityId);
-    }
-
-    /**
-     * Load into a local pre-lobby.
-     * This lobby can be networked.
-     */
-    public void loadIntoLocalLobby() {
-        Gdx.app.postRunnable(levelManager::startPreLobbyLevel);
-    }
-
-    /**
-     * Show an error dialog
-     *
-     * @param title the title
-     * @param error the error message
-     */
-    public void showErrorDialog(String title, String error) {
-        // TODO:
+    public void showDialog(String title, String message) {
+        mainMenu.showDialog(title, message);
     }
 
     @Override
     public void dispose() {
         mainMenu.dispose();
         networkHandler.dispose();
-        levelManager.dispose();
         thePlayer.dispose();
-        controller.dispose();
+        assetManager.dispose();
+        if (level != null)
+            level.dispose();
     }
 }

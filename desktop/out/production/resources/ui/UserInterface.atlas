@@ -61,6 +61,15 @@ down
   orig: 18, 18
   offset: 0, 0
   index: -1
+down1
+  rotate: false
+  xy: 69, 433
+  size: 18, 18
+  split: 6, 6, 6, 6
+  pad: 6, 6, 17, 0
+  orig: 18, 18
+  offset: 0, 0
+  index: -1
 up
   rotate: false
   xy: 93, 453

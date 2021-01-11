@@ -61,6 +61,5 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile group: 'io.netty', name: 'netty-all', version: '4.1.48.Final'
         compile project(":Protocol")
-        compile "com.kotcrab.vis:vis-ui:1.4.8"
     }
 }

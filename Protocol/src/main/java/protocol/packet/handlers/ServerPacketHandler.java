@@ -1,9 +1,7 @@
 package protocol.packet.handlers;
 
 import protocol.packet.PacketHandler;
-import protocol.packet.server.ServerCreateLobbyResponse;
-import protocol.packet.server.ServerDisconnect;
-import protocol.packet.server.ServerHandshakeResponse;
+import protocol.packet.server.*;
 
 /**
  * Handles packets received from the server.
@@ -11,24 +9,59 @@ import protocol.packet.server.ServerHandshakeResponse;
 public interface ServerPacketHandler extends PacketHandler {
 
     /**
-     * Handle the handshake response
+     * Handle the handshake reply
      *
-     * @param response the response
+     * @param reply the reply
      */
-    void handleHandshakeResponse(ServerHandshakeResponse response);
+    void handleHandshakeReply(ServerHandshakeReply reply);
 
     /**
-     * Handle the disconnect
+     * Handle the create lobby reply
+     *
+     * @param reply the reply
+     */
+    void handleCreateLobbyReply(ServerCreateLobbyReply reply);
+
+    /**
+     * Handle creating a player
+     *
+     * @param createPlayer the player
+     */
+    void handleCreatePlayer(ServerCreatePlayer createPlayer);
+
+    /**
+     * Handle removing a player
+     *
+     * @param removePlayer the player
+     */
+    void handleRemovePlayer(ServerRemovePlayer removePlayer);
+
+    /**
+     * Handle joining a lobby
+     *
+     * @param reply the reply
+     */
+    void handleJoinLobbyReply(ServerJoinLobbyReply reply);
+
+    /**
+     * Handle loading a level
+     *
+     * @param loadLevel the level
+     */
+    void handleLoadLevel(ServerLoadLevel loadLevel);
+
+    /**
+     * Handle player velocity
+     *
+     * @param velocity the velocity
+     */
+    void handlePlayerVelocity(ServerPlayerVelocity velocity);
+
+    /**
+     * Handle disconnect
      *
      * @param disconnect the disconnect
      */
     void handleDisconnect(ServerDisconnect disconnect);
-
-    /**
-     * Handle the create lobby response
-     *
-     * @param response the response
-     */
-    void handleCreateLobbyResponse(ServerCreateLobbyResponse response);
 
 }

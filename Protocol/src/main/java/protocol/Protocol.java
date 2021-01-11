@@ -2,14 +2,10 @@ package protocol;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import protocol.packet.client.ClientCreateLobbyRequest;
-import protocol.packet.client.ClientDisconnect;
-import protocol.packet.client.ClientHandshake;
+import protocol.packet.client.*;
 import protocol.packet.handlers.ClientPacketHandler;
 import protocol.packet.handlers.ServerPacketHandler;
-import protocol.packet.server.ServerCreateLobbyResponse;
-import protocol.packet.server.ServerDisconnect;
-import protocol.packet.server.ServerHandshakeResponse;
+import protocol.packet.server.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,9 +43,14 @@ public final class Protocol {
      * Initialize server side
      */
     private static void initializeServer() {
-        SERVER_PACKETS.put(ServerHandshakeResponse.PID, ServerHandshakeResponse::new);
+        SERVER_PACKETS.put(ServerHandshakeReply.PID, ServerHandshakeReply::new);
         SERVER_PACKETS.put(ServerDisconnect.PID, ServerDisconnect::new);
-        SERVER_PACKETS.put(ServerCreateLobbyResponse.PID, ServerCreateLobbyResponse::new);
+        SERVER_PACKETS.put(ServerCreateLobbyReply.PID, ServerCreateLobbyReply::new);
+        SERVER_PACKETS.put(ServerCreatePlayer.PID, ServerCreatePlayer::new);
+        SERVER_PACKETS.put(ServerRemovePlayer.PID, ServerRemovePlayer::new);
+        SERVER_PACKETS.put(ServerJoinLobbyReply.PID, ServerJoinLobbyReply::new);
+        SERVER_PACKETS.put(ServerLoadLevel.PID, ServerLoadLevel::new);
+        SERVER_PACKETS.put(ServerPlayerVelocity.PID, ServerPlayerVelocity::new);
     }
 
     /**
@@ -58,7 +59,10 @@ public final class Protocol {
     private static void initializeClient() {
         CLIENT_PACKETS.put(ClientHandshake.PID, ClientHandshake::new);
         CLIENT_PACKETS.put(ClientDisconnect.PID, ClientDisconnect::new);
-        CLIENT_PACKETS.put(ClientCreateLobbyRequest.PID, ClientCreateLobbyRequest::new);
+        CLIENT_PACKETS.put(ClientCreateLobby.PID, ClientCreateLobby::new);
+        CLIENT_PACKETS.put(ClientJoinLobby.PID, ClientJoinLobby::new);
+        CLIENT_PACKETS.put(ClientLevelLoaded.PID, ClientLevelLoaded::new);
+        CLIENT_PACKETS.put(ClientVelocity.PID, ClientVelocity::new);
     }
 
     /**

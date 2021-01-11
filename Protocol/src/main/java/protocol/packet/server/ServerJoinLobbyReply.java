@@ -5,49 +5,50 @@ import protocol.packet.Packet;
 import protocol.packet.handlers.ServerPacketHandler;
 
 /**
- * Sent by the server in response to {@link protocol.packet.client.ClientCreateLobbyRequest}
+ * Sent in response to {@link protocol.packet.client.ClientJoinLobby}
  */
-public final class ServerCreateLobbyResponse extends Packet<ServerPacketHandler> {
+public final class ServerJoinLobbyReply extends Packet {
+
+    public static final int PID = 10;
 
     /**
-     * PID
+     * Lobby ID
+     * entity ID
      */
-    public static final int PID = 6;
+    private int lobbyId, entityId;
 
     /**
-     * The lobby ID.
-     */
-    private int lobbyId = 0;
-
-    /**
-     * If the request is allowed;
+     * If allowed
      */
     private boolean allowed;
 
     /**
-     * The not allowed reason
+     * Not allowed reason
      */
     private String notAllowedReason;
 
     /**
      * Initialize
      *
-     * @param allowed          if its allowed
-     * @param notAllowedReason the reason if not
+     * @param lobbyId  the lobby ID
+     * @param entityId the entity ID
      */
-    public ServerCreateLobbyResponse(boolean allowed, String notAllowedReason) {
-        this.allowed = allowed;
-        this.notAllowedReason = notAllowedReason;
+    public ServerJoinLobbyReply(int lobbyId, int entityId) {
+        this.lobbyId = lobbyId;
+        this.entityId = entityId;
+        this.allowed = true;
+        this.notAllowedReason = "";
     }
 
     /**
      * Initialize
      *
-     * @param lobbyId the lobby ID
+     * @param allowed          if allowed
+     * @param notAllowedReason the reason
      */
-    public ServerCreateLobbyResponse(int lobbyId) {
-        this(true, "");
-        this.lobbyId = lobbyId;
+    public ServerJoinLobbyReply(boolean allowed, String notAllowedReason) {
+        this.allowed = allowed;
+        this.notAllowedReason = notAllowedReason;
     }
 
     /**
@@ -56,27 +57,34 @@ public final class ServerCreateLobbyResponse extends Packet<ServerPacketHandler>
      * @param buffer  buffer
      * @param handler handler
      */
-    public ServerCreateLobbyResponse(ByteBuf buffer, ServerPacketHandler handler) {
+    public ServerJoinLobbyReply(ByteBuf buffer, ServerPacketHandler handler) {
         super(buffer);
-        handler.handleCreateLobbyResponse(this);
+        handler.handleJoinLobbyReply(this);
     }
 
     /**
-     * @return the lobby ID.
+     * @return lobby ID
      */
     public int lobbyId() {
         return lobbyId;
     }
 
     /**
-     * @return if the request is allowed
+     * @return entity ID
+     */
+    public int entityId() {
+        return entityId;
+    }
+
+    /**
+     * @return if allowed
      */
     public boolean allowed() {
         return allowed;
     }
 
     /**
-     * @return the not allowed reason.
+     * @return the reason
      */
     public String notAllowedReason() {
         return notAllowedReason;
@@ -92,6 +100,7 @@ public final class ServerCreateLobbyResponse extends Packet<ServerPacketHandler>
         createBuffer();
         writePid();
         writeInt(lobbyId);
+        writeInt(entityId);
         writeBoolean(allowed);
         writeString(notAllowedReason);
     }
@@ -99,6 +108,7 @@ public final class ServerCreateLobbyResponse extends Packet<ServerPacketHandler>
     @Override
     public void decode() {
         lobbyId = readInt();
+        entityId = readInt();
         allowed = readBoolean();
         notAllowedReason = readString();
     }

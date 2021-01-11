@@ -1,16 +1,17 @@
 package server.game.entity;
 
-import server.game.location.Location;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Disposable;
 
 /**
- * Represents a bare bone entity
+ * Represents a bare bones entity
  */
-public abstract class Entity {
+public abstract class Entity implements Disposable {
 
     /**
-     * Location of this entity
+     * The location of this entity
      */
-    protected final Location location = new Location();
+    protected final Vector2 location = new Vector2();
 
     /**
      * The entity name
@@ -40,12 +41,6 @@ public abstract class Entity {
         return entityName;
     }
 
-    /**
-     * @return the location
-     */
-    public Location location() {
-        return location;
-    }
 
     /**
      * @return the entity ID
@@ -55,22 +50,28 @@ public abstract class Entity {
     }
 
     /**
+     * Update this entity
+     */
+    public abstract void update();
+
+    /**
+     * @return the entity location
+     */
+    public Vector2 location() {
+        return location;
+    }
+
+    /**
      * @return X
      */
     public float x() {
-        return location.x();
+        return location.x;
     }
 
     /**
      * @return Y
      */
     public float y() {
-        return location.y();
+        return location.y;
     }
-
-    /**
-     * Update this entity
-     */
-    public abstract void update();
-
 }

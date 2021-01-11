@@ -45,7 +45,7 @@ public final class MainMenuUserInterface extends UserInterface {
 
     /**
      * Initialize the main menu container.
-     * TODO: I suck at UI
+     * TODO: Improve the UI over-time.
      */
     private void initializeMainMenuContainer() {
         Table root = new Table();
@@ -54,43 +54,39 @@ public final class MainMenuUserInterface extends UserInterface {
 
         // game name label
         final Label gameNameLabel = new Label("Oasis", uiSkin);
-        root.add(gameNameLabel).expandX().left().padLeft(25f).padTop(-400f).padBottom(2f).row();
+        root.add(gameNameLabel).center().row();
 
         // username entry
         final TextField usernameField = new TextField("", uiSkin);
         usernameField.setMessageText("Enter username");
-        root.add(usernameField).left().padLeft(25f).padTop(-350f).row();
+        root.add(usernameField).center().row();
 
         // action buttons
         final TextButton createLobbyButton = new TextButton("Create lobby", uiSkin);
-        root.add(createLobbyButton).left().padLeft(25f).padTop(-300f).row();
+        root.add(createLobbyButton).center().row();
         final TextButton joinLobbyButton = new TextButton("Join lobby", uiSkin);
-        root.add(joinLobbyButton).left().padLeft(25f).padTop(-243f).row();
+        root.add(joinLobbyButton).center().row();
         final TextButton settingsButton = new TextButton("Settings", uiSkin);
-        root.add(settingsButton).left().padLeft(25f).padTop((-243) + 57).row();
+        root.add(settingsButton).center().row();
 
         createLobbyButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                // disable buttons and set local state
                 changeButtonState(true, createLobbyButton, joinLobbyButton, settingsButton);
-                game.setPlayerUsername(usernameField.getText());
-
-                game
-                        .network()
-                        .connectToMasterServer()
-                        .whenComplete((result, error) -> {
-                            if (result) {
-                                // request to create a lobby.
-                                game.network().networkCreateLobby();
-                            } else {
-                                error.printStackTrace();
-                                showDialog("Failed to connect to server.", error.getMessage());
-                                changeButtonState(false, createLobbyButton, joinLobbyButton, settingsButton);
-                            }
-                        });
+                game.thePlayer().entityName(usernameField.getText());
+                handleCreateLobbyChange();
             }
         });
+
+        joinLobbyButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                changeButtonState(true, createLobbyButton, joinLobbyButton, settingsButton);
+                game.thePlayer().entityName(usernameField.getText());
+                handleJoinLobbyChange();
+            }
+        });
+
     }
 
     /**
@@ -104,8 +100,40 @@ public final class MainMenuUserInterface extends UserInterface {
     }
 
     /**
+     * Connect to the master server
+     *
+     * @return the result
+     */
+    private boolean connectToMasterServer() {
+        try {
+            game.network().connectToMasterServer().get();
+            return true;
+        } catch (Exception any) {
+            showDialog("Failed to connect", "Failed to connect to the server.\n" + any.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Handle creating a lobby
+     */
+    private void handleCreateLobbyChange() {
+        if (connectToMasterServer()) {
+            game.network().networkCreateLobby();
+        }
+    }
+
+    /**
+     * Handle joining a lobby
+     */
+    private void handleJoinLobbyChange() {
+        if (connectToMasterServer()) {
+            game.network().networkJoinLobby();
+        }
+    }
+
+    /**
      * Initialize the settings container
-     * TODO
      */
     private void initializeSettingsContainer() {
     }

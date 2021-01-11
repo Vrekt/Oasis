@@ -3,7 +3,7 @@ package me.vrekt.oasis.network.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import me.vrekt.oasis.network.handler.FromServerPacketHandler;
+import me.vrekt.oasis.network.handler.DefaultServerPacketHandler;
 import protocol.Protocol;
 
 /**
@@ -14,14 +14,14 @@ public final class ServerProtocolPacketDecoder extends LengthFieldBasedFrameDeco
     /**
      * The handler
      */
-    private final FromServerPacketHandler handler;
+    private final DefaultServerPacketHandler handler;
 
     /**
      * Initialize this local decoder
      *
      * @param handler the handler
      */
-    public ServerProtocolPacketDecoder(FromServerPacketHandler handler) {
+    public ServerProtocolPacketDecoder(DefaultServerPacketHandler handler) {
         super(Integer.MAX_VALUE, 0, 4);
         this.handler = handler;
     }

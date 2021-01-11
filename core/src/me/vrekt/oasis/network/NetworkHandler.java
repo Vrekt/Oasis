@@ -3,18 +3,16 @@ package me.vrekt.oasis.network;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import me.vrekt.oasis.Oasis;
+import me.vrekt.oasis.entity.rotation.Rotation;
 import me.vrekt.oasis.network.codec.ServerProtocolPacketDecoder;
-import me.vrekt.oasis.network.handler.FromServerPacketHandler;
-import me.vrekt.oasis.network.session.Session;
+import me.vrekt.oasis.network.handler.DefaultServerPacketHandler;
 import protocol.Protocol;
 import protocol.channel.ClientChannels;
 import protocol.codec.ProtocolPacketEncoder;
-import protocol.packet.client.ClientCreateLobbyRequest;
+import protocol.packet.client.*;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -34,6 +32,11 @@ public final class NetworkHandler implements Disposable {
      * TODO: Only while dev!
      */
     private static final int MASTER_SERVER_PORT = 8090;
+
+    /**
+     * Logging tag
+     */
+    private static final String TAG = "NetworkHandler";
 
     /**
      * The netty bootstrap
@@ -69,7 +72,6 @@ public final class NetworkHandler implements Disposable {
                         handleSocketConnection(channel);
                     }
                 });
-
     }
 
     /**
@@ -78,16 +80,11 @@ public final class NetworkHandler implements Disposable {
      * @return the future result.
      */
     public CompletableFuture<Boolean> connectToMasterServer() {
+        if (sendChannel != null && sendChannel.isActive()) return CompletableFuture.completedFuture(true);
+
         final CompletableFuture<Boolean> result = new CompletableFuture<>();
         group.execute(() -> connectInternal(result));
         return result;
-    }
-
-    /**
-     * Attempt to create a lobby.
-     */
-    public void networkCreateLobby() {
-        sendChannel.writeAndFlush(new ClientCreateLobbyRequest());
     }
 
     /**
@@ -96,16 +93,47 @@ public final class NetworkHandler implements Disposable {
      * @param result the result.
      */
     private void connectInternal(CompletableFuture<Boolean> result) {
-        Gdx.app.log("NetworkHandler", "Connecting to master server at " + MASTER_SERVER_IP + ":" + MASTER_SERVER_PORT);
         try {
             sendChannel = bootstrap.connect(MASTER_SERVER_IP, MASTER_SERVER_PORT).sync().channel();
             result.complete(true);
-
-            Gdx.app.log("NetworkHandler", "Connected to master server!");
         } catch (Exception exception) {
-            Gdx.app.log("NetworkHandler", "Failed to connect to " + MASTER_SERVER_IP + ":" + MASTER_SERVER_PORT, exception);
+            Gdx.app.log(TAG, "Failed to connect to " + MASTER_SERVER_IP + ":" + MASTER_SERVER_PORT, exception);
             result.completeExceptionally(exception);
         }
+    }
+
+    /**
+     * Try to create a lobby
+     */
+    public void networkCreateLobby() {
+        Gdx.app.log(TAG, "Requesting to create a new lobby.");
+        sendChannel.writeAndFlush(new ClientCreateLobby(Oasis.get().thePlayer().entityName()));
+    }
+
+    /**
+     * TODO: For now 9999
+     */
+    public void networkJoinLobby() {
+        Gdx.app.log(TAG, "Attempting to join lobby 9999");
+        sendChannel.writeAndFlush(new ClientJoinLobby(Oasis.get().thePlayer().entityName(), 9999));
+    }
+
+    /**
+     * Send that we are loaded in
+     */
+    public void sendNetworkLoaded() {
+        sendChannel.writeAndFlush(new ClientLevelLoaded());
+    }
+
+    /**
+     * Send velocity over the network
+     *
+     * @param velocityX X vel
+     * @param velocityY Y vel
+     * @param rotation  the rotation
+     */
+    public void networkVelocity(float velocityX, float velocityY, Rotation rotation) {
+        sendChannel.writeAndFlush(new ClientVelocity(velocityX, velocityY, rotation.ordinal()));
     }
 
     /**
@@ -116,9 +144,52 @@ public final class NetworkHandler implements Disposable {
     private void handleSocketConnection(SocketChannel channel) {
         Protocol.initialize();
 
-        channel.pipeline().addLast(new ServerProtocolPacketDecoder(new FromServerPacketHandler()));
+        channel.pipeline().addLast(new ServerProtocolPacketDecoder(new DefaultServerPacketHandler(this)));
         channel.pipeline().addLast(new ProtocolPacketEncoder());
-        channel.pipeline().addLast(new Session(channel));
+        channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+            @Override
+            public void channelActive(ChannelHandlerContext ctx) {
+                handleChannelActive();
+            }
+
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                handleChannelException(cause);
+            }
+        });
+    }
+
+    /**
+     * Handle channel active
+     * Handles handshaking with the server once the connection is opened.
+     */
+    private void handleChannelActive() {
+        Gdx.app.log(TAG, "Handshaking with remote server, game=" + Oasis.GAME_VERSION + " protocol=" + Protocol.PROTOCOL_VERSION);
+        sendChannel.writeAndFlush(new ClientHandshake(Oasis.GAME_VERSION, Protocol.PROTOCOL_VERSION));
+    }
+
+    /**
+     * Handle a channel exception
+     *
+     * @param any any
+     */
+    private void handleChannelException(Throwable any) {
+        close();
+        Gdx.app.log(TAG, "Channel exception caught", any);
+        Oasis.get().showDialog("Network error", "An error occurred while communicating with the server.\n" + any.getMessage());
+        Oasis.get().showMainMenuAsync();
+    }
+
+    /**
+     * Close
+     */
+    public void close() {
+        if (sendChannel != null) {
+            sendChannel.pipeline().remove(ServerProtocolPacketDecoder.class);
+            sendChannel.pipeline().remove(ProtocolPacketEncoder.class);
+
+            sendChannel.close();
+        }
     }
 
     /**
@@ -126,7 +197,7 @@ public final class NetworkHandler implements Disposable {
      */
     @Override
     public void dispose() {
-        if (sendChannel != null) sendChannel.close();
+        close();
         group.shutdownGracefully();
     }
 

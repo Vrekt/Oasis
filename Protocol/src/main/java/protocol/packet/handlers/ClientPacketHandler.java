@@ -1,8 +1,10 @@
 package protocol.packet.handlers;
 
 import protocol.packet.PacketHandler;
-import protocol.packet.client.ClientCreateLobbyRequest;
+import protocol.packet.client.ClientCreateLobby;
 import protocol.packet.client.ClientHandshake;
+import protocol.packet.client.ClientJoinLobby;
+import protocol.packet.client.ClientVelocity;
 
 /**
  * Handles packets received from the client.
@@ -17,11 +19,30 @@ public interface ClientPacketHandler extends PacketHandler {
     void handleHandshake(ClientHandshake packet);
 
     /**
-     * Handle a request to create a lobby
+     * Handle creating a lobby.
      *
-     * @param request the request
+     * @param createLobby packet
      */
-    void handleCreateLobbyRequest(ClientCreateLobbyRequest request);
+    void handleCreateLobby(ClientCreateLobby createLobby);
+
+    /**
+     * Handle joining a lobby
+     *
+     * @param joinLobby packet
+     */
+    void handleJoinLobby(ClientJoinLobby joinLobby);
+
+    /**
+     * Handle velocity
+     *
+     * @param velocity the velocity
+     */
+    void handleVelocity(ClientVelocity velocity);
+
+    /**
+     * Handle when a level is loaded.
+     */
+    void handleLevelLoaded();
 
     /**
      * Handle a client disconnect.

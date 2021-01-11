@@ -8,10 +8,10 @@ import protocol.packet.Packet;
 /**
  * Encodes incoming packets then appends the length
  */
-public final class ProtocolPacketEncoder extends MessageToByteEncoder<Packet<?>> {
+public final class ProtocolPacketEncoder extends MessageToByteEncoder<Packet> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Packet<?> packet, ByteBuf out) {
+    protected void encode(ChannelHandlerContext ctx, Packet packet, ByteBuf out) {
         try {
             packet.encode();
             final int length = packet.buffer().readableBytes();

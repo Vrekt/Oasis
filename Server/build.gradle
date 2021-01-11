@@ -11,5 +11,7 @@ repositories {
 
 dependencies {
     compile group: 'io.netty', name: 'netty-all', version: '4.1.48.Final'
+    compile group: 'com.badlogicgames.gdx', name: 'gdx-box2d', version: '1.9.13'
+
     compile project(":Protocol")
 }

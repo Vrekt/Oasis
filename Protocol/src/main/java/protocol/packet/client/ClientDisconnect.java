@@ -7,7 +7,7 @@ import protocol.packet.handlers.ClientPacketHandler;
 /**
  * Sent by clients to indicate a disconnect
  */
-public final class ClientDisconnect extends Packet<ClientPacketHandler> {
+public final class ClientDisconnect extends Packet {
 
     /**
      * PID
@@ -17,10 +17,10 @@ public final class ClientDisconnect extends Packet<ClientPacketHandler> {
     /**
      * Initialize
      *
-     * @param byteBuf buffer
+     * @param buffer buffer
      * @param handler handler
      */
-    public ClientDisconnect(ByteBuf byteBuf, ClientPacketHandler handler) {
+    public ClientDisconnect(ByteBuf buffer, ClientPacketHandler handler) {
         handler.handleDisconnect();
     }
 

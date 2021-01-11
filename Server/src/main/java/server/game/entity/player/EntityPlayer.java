@@ -13,7 +13,12 @@ public final class EntityPlayer extends Entity {
     /**
      * Handles sending packets.
      */
-    private final Consumer<Packet<?>> packetHandler;
+    private final Consumer<Packet> packetHandler;
+
+    /**
+     * If the player is loaded.
+     */
+    private boolean isLoaded;
 
     /**
      * Initialize
@@ -21,7 +26,7 @@ public final class EntityPlayer extends Entity {
      * @param entityName name
      * @param entityId   ID
      */
-    public EntityPlayer(String entityName, int entityId, Consumer<Packet<?>> packetHandler) {
+    public EntityPlayer(String entityName, int entityId, Consumer<Packet> packetHandler) {
         super(entityName, entityId);
         this.packetHandler = packetHandler;
     }
@@ -31,12 +36,31 @@ public final class EntityPlayer extends Entity {
      *
      * @param packet the packet
      */
-    public void send(Packet<?> packet) {
+    public void send(Packet packet) {
         packetHandler.accept(packet);
+    }
+
+    /**
+     * @return if the player is loaded
+     */
+    public boolean isLoaded() {
+        return isLoaded;
+    }
+
+    /**
+     * @param loaded set loaded
+     */
+    public void isLoaded(boolean loaded) {
+        isLoaded = loaded;
     }
 
     @Override
     public void update() {
+
+    }
+
+    @Override
+    public void dispose() {
 
     }
 }

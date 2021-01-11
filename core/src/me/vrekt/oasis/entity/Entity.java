@@ -3,7 +3,6 @@ package me.vrekt.oasis.entity;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import me.vrekt.oasis.entity.rotation.Rotation;
 
@@ -64,31 +63,6 @@ public abstract class Entity implements Disposable {
     public abstract void render(float delta, SpriteBatch batch);
 
     /**
-     * Spawn the entity in a world
-     *
-     * @param world the world
-     */
-    public abstract void spawnEntityInWorld(World world, Vector2 position);
-
-    /**
-     * Apply horizontal amount
-     *
-     * @param amount amount
-     */
-    protected void applyHorizontalVelocity(float amount) {
-        velocity.x = amount;
-    }
-
-    /**
-     * Apply vertical amount
-     *
-     * @param amount amount
-     */
-    protected void applyVerticalVelocity(float amount) {
-        velocity.y = amount;
-    }
-
-    /**
      * Reset velocity
      */
     protected void resetVelocity() {
@@ -141,4 +115,26 @@ public abstract class Entity implements Disposable {
         return entityBody.getPosition().y;
     }
 
+    /**
+     * @return the body
+     */
+    public Body entityBody() {
+        return entityBody;
+    }
+
+    /**
+     * @return the entity rotation
+     */
+    public Rotation rotation() {
+        return rotation;
+    }
+
+    /**
+     * Set the rotation
+     *
+     * @param rotation the rotation
+     */
+    public void rotation(Rotation rotation) {
+        this.rotation = rotation;
+    }
 }

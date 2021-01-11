@@ -3,7 +3,6 @@ package me.vrekt.oasis.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
-import me.vrekt.oasis.Oasis;
 import me.vrekt.oasis.ui.menu.MainMenuUserInterface;
 
 /**
@@ -28,7 +27,7 @@ public final class MainMenuScreen extends ScreenAdapter {
 
     @Override
     public void show() {
-        Gdx.app.log(Oasis.TAG, "Showing the main menu.");
+        Gdx.app.log("MainMenu", "Showing the main menu.");
         ui.create();
     }
 

@@ -7,17 +7,12 @@ import protocol.packet.handlers.ClientPacketHandler;
 /**
  * Basic client handshake packet
  */
-public final class ClientHandshake extends Packet<ClientPacketHandler> {
+public final class ClientHandshake extends Packet {
 
     /**
      * PID
      */
     public static final int PID = 1;
-
-    /**
-     * Username
-     */
-    private String username;
 
     /**
      * Versioning
@@ -27,12 +22,10 @@ public final class ClientHandshake extends Packet<ClientPacketHandler> {
     /**
      * Initialize
      *
-     * @param username        the username
      * @param gameVersion     the game version
      * @param protocolVersion the protocol version
      */
-    public ClientHandshake(String username, int gameVersion, int protocolVersion) {
-        this.username = username;
+    public ClientHandshake(int gameVersion, int protocolVersion) {
         this.gameVersion = gameVersion;
         this.protocolVersion = protocolVersion;
     }
@@ -46,13 +39,6 @@ public final class ClientHandshake extends Packet<ClientPacketHandler> {
     public ClientHandshake(ByteBuf buffer, ClientPacketHandler handler) {
         super(buffer);
         handler.handleHandshake(this);
-    }
-
-    /**
-     * @return the client username
-     */
-    public String username() {
-        return username;
     }
 
     /**
@@ -78,14 +64,12 @@ public final class ClientHandshake extends Packet<ClientPacketHandler> {
     public void encode() {
         createBuffer();
         writePid();
-        writeString(username);
         writeInt(gameVersion);
         writeInt(protocolVersion);
     }
 
     @Override
     public void decode() {
-        username = readString();
         gameVersion = readInt();
         protocolVersion = readInt();
     }

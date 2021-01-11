@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * A protocol packet.
  */
-public abstract class Packet<T extends PacketHandler> {
+public abstract class Packet {
 
     /**
      * The buffer for this packet

@@ -1,18 +1,19 @@
 package me.vrekt.oasis.level;
 
+import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import me.vrekt.oasis.Oasis;
+import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
+import me.vrekt.oasis.level.world.LevelWorld;
 
 /**
- * Represents a basic level.
+ * Represents a level.
  */
-public abstract class Level implements Disposable {
+public abstract class Level extends ScreenAdapter implements Disposable {
 
     /**
      * The name of the level
@@ -32,7 +33,7 @@ public abstract class Level implements Disposable {
     /**
      * The map for this level.
      */
-    protected TiledMap levelMap;
+    protected TiledMap tiledMap;
 
     /**
      * The renderer for this level.
@@ -45,60 +46,75 @@ public abstract class Level implements Disposable {
     protected SpriteBatch batch;
 
     /**
-     * The world for this level.
+     * The world for this level
      */
-    protected World levelWorld;
+    protected LevelWorld world;
 
     /**
-     * The spawn for the level.
+     * If this level is loaded
      */
-    protected Vector2 spawn;
+    protected boolean loaded;
 
     /**
-     * Step accumulator
+     * The player
      */
-    protected float worldStepAccumulator;
+    protected final LocalEntityPlayer thePlayer;
 
     /**
-     * Initialize
+     * Initialize the new level
      *
-     * @param levelName the name of the level.
+     * @param levelName the level name
      */
     public Level(String levelName) {
         this.levelName = levelName;
         game = Oasis.get();
+        thePlayer = game.thePlayer();
     }
 
     /**
-     * @return the level name
+     * @return the name of this level.
      */
     public String levelName() {
         return levelName;
     }
 
     /**
+     * @return the world
+     */
+    public LevelWorld world() {
+        return world;
+    }
+
+    /**
      * Load the level
+     *
+     * @return the result of loading.
      */
-    public abstract boolean loadLevel();
+    public abstract boolean load();
 
     /**
-     * Update this level
-     *
-     * @param delta the delta
+     * Unload the level
      */
-    public abstract void update(float delta);
+    public abstract void unload();
 
     /**
-     * Render this level
-     *
-     * @param delta the delta
+     * @return if the level is loaded
      */
-    public abstract void render(float delta);
+    public boolean loaded() {
+        return loaded;
+    }
 
     @Override
     public void dispose() {
+        if (world != null) world.dispose();
         if (renderer != null) renderer.dispose();
-        if (levelMap != null) levelMap.dispose();
+        if (tiledMap != null) tiledMap.dispose();
         if (batch != null) batch.dispose();
+        camera = null;
+        loaded = false;
+        world = null;
+        renderer = null;
+        tiledMap = null;
+        batch = null;
     }
 }

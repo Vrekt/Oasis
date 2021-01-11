@@ -64,4 +64,10 @@ com.badlogic.gdx.scenes.scene2d.ui.TextTooltip$TextTooltipStyle: {
 		label: default
 	}
 }
+com.badlogic.gdx.scenes.scene2d.ui.Window$WindowStyle: {
+	default: {
+		background: down1
+		titleFont: alagard
+	}
+}
 }
