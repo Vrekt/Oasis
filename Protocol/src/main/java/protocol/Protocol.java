@@ -51,6 +51,7 @@ public final class Protocol {
         SERVER_PACKETS.put(ServerJoinLobbyReply.PID, ServerJoinLobbyReply::new);
         SERVER_PACKETS.put(ServerLoadLevel.PID, ServerLoadLevel::new);
         SERVER_PACKETS.put(ServerPlayerVelocity.PID, ServerPlayerVelocity::new);
+        SERVER_PACKETS.put(ServerPlayerPosition.PID, ServerPlayerPosition::new);
     }
 
     /**
@@ -63,6 +64,7 @@ public final class Protocol {
         CLIENT_PACKETS.put(ClientJoinLobby.PID, ClientJoinLobby::new);
         CLIENT_PACKETS.put(ClientLevelLoaded.PID, ClientLevelLoaded::new);
         CLIENT_PACKETS.put(ClientVelocity.PID, ClientVelocity::new);
+        CLIENT_PACKETS.put(ClientPosition.PID, ClientPosition::new);
     }
 
     /**

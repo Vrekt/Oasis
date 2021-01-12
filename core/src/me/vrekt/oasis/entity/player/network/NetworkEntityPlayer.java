@@ -2,6 +2,7 @@ package me.vrekt.oasis.entity.player.network;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.Vector2;
 import me.vrekt.oasis.entity.player.EntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
 
@@ -14,6 +15,10 @@ public final class NetworkEntityPlayer extends EntityPlayer {
      * Velocity
      */
     private float velocityX, velocityY;
+
+    private boolean doPositionInterpolation;
+
+    private float interpolateToX, interpolateToY;
 
     /**
      * Initialize
@@ -38,6 +43,25 @@ public final class NetworkEntityPlayer extends EntityPlayer {
         this.velocityY = velocityY;
     }
 
+    /**
+     * Update position
+     *
+     * @param x        x
+     * @param y        y
+     * @param rotation rotation
+     */
+    public void updatePosition(float x, float y, Rotation rotation) {
+        this.rotation = rotation;
+        final float dst = current.dst2(x, y);
+
+        // interpolate to pos if too far away (de sync)
+        if (dst >= 10) {
+            doPositionInterpolation = true;
+            interpolateToX = x;
+            interpolateToY = y;
+        }
+    }
+
     @Override
     public void resetState() {
         controller.reset();
@@ -48,7 +72,16 @@ public final class NetworkEntityPlayer extends EntityPlayer {
     public void update(float delta) {
         // update locations for interpolation
         previous = current;
-        current = entityBody.getPosition();
+        current = entityBody.getPosition().cpy();
+
+        // TODO: Needs work i think
+        // TODO: Tmw
+        if (doPositionInterpolation) {
+            final Vector2 to = new Vector2(interpolateToX, interpolateToY);
+            current.interpolate(to, delta, Interpolation.linear);
+            doPositionInterpolation = false;
+            return;
+        }
 
         // the interpolated velocity for (hopefully) smooth movement
         final float interpolatedVelocityX = velocityX == 0.0f ? 0.0f : Interpolation.linear.apply(previous.x, current.x, delta) * velocityX;
@@ -61,6 +94,6 @@ public final class NetworkEntityPlayer extends EntityPlayer {
 
     @Override
     public void render(float delta, SpriteBatch batch) {
-        controller.render(delta, rotation, entityBody.getPosition(), batch);
+        controller.render(delta, rotation, current, batch);
     }
 }

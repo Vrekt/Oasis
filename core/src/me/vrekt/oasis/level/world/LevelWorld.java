@@ -94,6 +94,21 @@ public final class LevelWorld implements Disposable {
     }
 
     /**
+     * Update a network players position
+     *
+     * @param entityId the entity ID
+     * @param x        x
+     * @param y        y
+     * @param rotation rotation
+     */
+    public void updateNetworkPlayerPosition(int entityId, float x, float y, int rotation) {
+        final NetworkEntityPlayer player = networkPlayers.get(entityId);
+        if (player != null) {
+            player.updatePosition(x, y, Rotation.values()[rotation]);
+        }
+    }
+
+    /**
      * Update the world
      *
      * @param delta the delta

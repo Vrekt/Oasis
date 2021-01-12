@@ -1,6 +1,7 @@
 package protocol.packet.server;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import protocol.packet.Packet;
 import protocol.packet.handlers.ServerPacketHandler;
 
@@ -25,6 +26,28 @@ public final class ServerPlayerVelocity extends Packet {
      * Rotation index
      */
     private int rotationIndex;
+
+    /**
+     * Encode the packet
+     *
+     * @param entityId      EID
+     * @param velocityX     X
+     * @param velocityY     Y
+     * @param rotationIndex rotation index
+     * @return the byte buf
+     */
+    public static ByteBuf encodeDirect(int entityId, float velocityX, float velocityY, int rotationIndex) {
+        final ServerPlayerVelocity packet = new ServerPlayerVelocity(entityId, velocityX, velocityY, rotationIndex);
+        packet.encode();
+
+        final int length = packet.buffer.readableBytes();
+        final ByteBuf direct = Unpooled.buffer();
+
+        direct.writeInt(length);
+        direct.writeBytes(packet.buffer);
+        packet.dispose();
+        return direct;
+    }
 
     /**
      * Initialize

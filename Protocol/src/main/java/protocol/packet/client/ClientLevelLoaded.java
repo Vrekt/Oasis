@@ -9,7 +9,7 @@ import protocol.packet.handlers.ClientPacketHandler;
  */
 public final class ClientLevelLoaded extends Packet {
 
-    public static final int PID = 10;
+    public static final int PID = 16;
 
     /**
      * Empty
@@ -17,6 +17,12 @@ public final class ClientLevelLoaded extends Packet {
     public ClientLevelLoaded() {
     }
 
+    /**
+     * Initialize
+     *
+     * @param buffer  buffer
+     * @param handler handler
+     */
     public ClientLevelLoaded(ByteBuf buffer, ClientPacketHandler handler) {
         super(buffer);
         handler.handleLevelLoaded();

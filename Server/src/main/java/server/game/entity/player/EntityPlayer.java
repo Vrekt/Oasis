@@ -1,9 +1,10 @@
 package server.game.entity.player;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import protocol.packet.Packet;
 import server.game.entity.Entity;
 
-import java.util.function.Consumer;
 
 /**
  * Represents a player entity
@@ -11,9 +12,9 @@ import java.util.function.Consumer;
 public final class EntityPlayer extends Entity {
 
     /**
-     * Handles sending packets.
+     * Sending channel
      */
-    private final Consumer<Packet> packetHandler;
+    private final Channel channel;
 
     /**
      * If the player is loaded.
@@ -26,9 +27,9 @@ public final class EntityPlayer extends Entity {
      * @param entityName name
      * @param entityId   ID
      */
-    public EntityPlayer(String entityName, int entityId, Consumer<Packet> packetHandler) {
+    public EntityPlayer(String entityName, int entityId, Channel channel) {
         super(entityName, entityId);
-        this.packetHandler = packetHandler;
+        this.channel = channel;
     }
 
     /**
@@ -37,7 +38,20 @@ public final class EntityPlayer extends Entity {
      * @param packet the packet
      */
     public void send(Packet packet) {
-        packetHandler.accept(packet);
+        channel.writeAndFlush(packet);
+    }
+
+    /**
+     * Send a direct buffer
+     *
+     * @param direct direct
+     */
+    public void queue(ByteBuf direct) {
+       channel.writeAndFlush(direct);
+    }
+
+    public void flush() {
+     //   channel.flush();
     }
 
     /**

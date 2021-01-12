@@ -137,6 +137,17 @@ public final class NetworkHandler implements Disposable {
     }
 
     /**
+     * Send position over the network
+     *
+     * @param x        x
+     * @param y        y
+     * @param rotation rotation
+     */
+    public void networkPosition(float x, float y, Rotation rotation) {
+        sendChannel.writeAndFlush(new ClientPosition(rotation.ordinal(), x, y));
+    }
+
+    /**
      * Handle a new socket connection
      *
      * @param channel channel
@@ -174,10 +185,10 @@ public final class NetworkHandler implements Disposable {
      * @param any any
      */
     private void handleChannelException(Throwable any) {
-        close();
         Gdx.app.log(TAG, "Channel exception caught", any);
         Oasis.get().showDialog("Network error", "An error occurred while communicating with the server.\n" + any.getMessage());
         Oasis.get().showMainMenuAsync();
+        close();
     }
 
     /**
@@ -185,9 +196,6 @@ public final class NetworkHandler implements Disposable {
      */
     public void close() {
         if (sendChannel != null) {
-            sendChannel.pipeline().remove(ServerProtocolPacketDecoder.class);
-            sendChannel.pipeline().remove(ProtocolPacketEncoder.class);
-
             sendChannel.close();
         }
     }

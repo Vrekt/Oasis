@@ -11,6 +11,7 @@ import me.vrekt.oasis.network.NetworkHandler;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The local player
@@ -20,12 +21,12 @@ public final class LocalEntityPlayer extends EntityPlayer {
     /**
      * The ms send rate
      */
-    private final long sendRateMs = 50;
+    private final long velocitySendRateMs = 50, positionSendRateMs = 300;
 
     /**
-     * Last packet send
+     * Last packet sends
      */
-    private long lastPacketSend = System.currentTimeMillis();
+    private long lastVelocitySend, lastPositionSend;
 
     /**
      * Net handler
@@ -80,6 +81,7 @@ public final class LocalEntityPlayer extends EntityPlayer {
         // update locations for interpolation
         previous = current;
         current = entityBody.getPosition();
+        final boolean hasMoved = velocityX != 0.0 || velocityY != 0.0;
 
         // the interpolated velocity for (hopefully) smooth movement
         // TODO: Some hitches here and there but def better then not having this
@@ -87,14 +89,19 @@ public final class LocalEntityPlayer extends EntityPlayer {
         final float interpolatedVelocityY = velocityY == 0.0f ? 0.0f : Interpolation.linear.apply(previous.y, current.y, delta) * velocityY;
 
         // update
-        controller.update(rotation, (velocityX != 0.0f || velocityY != 0.0f), false);
+        controller.update(rotation, hasMoved, false);
         entityBody.setLinearVelocity(interpolatedVelocityX, interpolatedVelocityY);
 
-        // send the player velocity
-        if (System.currentTimeMillis() - lastPacketSend >= sendRateMs) {
-            Gdx.graphics.setTitle("FPS " + Gdx.graphics.getFramesPerSecond());
+        final long now = System.currentTimeMillis();
+        final long fakeLag = ThreadLocalRandom.current().nextInt(150, 350);
+        if (now - lastVelocitySend >= velocitySendRateMs + fakeLag) {
             network.networkVelocity(velocityX, velocityY, rotation);
-            lastPacketSend = System.currentTimeMillis();
+            lastVelocitySend = now;
+        }
+
+        if(now - lastPositionSend >= positionSendRateMs + fakeLag) {
+            network.networkPosition(current.x, current.y, rotation);
+            lastPositionSend = now;
         }
     }
 

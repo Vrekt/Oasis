@@ -6,10 +6,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import protocol.Protocol;
 import protocol.codec.ProtocolPacketEncoder;
 import protocol.packet.Packet;
-import protocol.packet.client.ClientCreateLobby;
-import protocol.packet.client.ClientHandshake;
-import protocol.packet.client.ClientJoinLobby;
-import protocol.packet.client.ClientVelocity;
+import protocol.packet.client.*;
 import protocol.packet.handlers.ClientPacketHandler;
 import protocol.packet.server.ServerCreateLobbyReply;
 import protocol.packet.server.ServerHandshakeReply;
@@ -19,6 +16,7 @@ import server.game.entity.player.EntityPlayer;
 import server.game.lobby.Lobby;
 import server.netty.codec.ClientProtocolPacketDecoder;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -55,7 +53,13 @@ public final class GameServer {
      * Tick lobbies
      */
     private void tickLobbies() {
-        lobbies.values().forEach(Lobby::tick);
+        lobbies.values().forEach(lobby -> {
+            try {
+                lobby.tick();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
@@ -145,7 +149,7 @@ public final class GameServer {
                 final int entityId = lobby.assignUniqueEntityId();
 
                 // create the player and spawn them
-                player = new EntityPlayer(createLobby.username(), entityId, this::send);
+                player = new EntityPlayer(createLobby.username(), entityId, sessionChannel);
                 player.location().set(420, 544);
 
                 lobby.spawnPlayerInLobby(player);
@@ -171,7 +175,7 @@ public final class GameServer {
                 send(new ServerJoinLobbyReply(lobbyId, entityId));
 
                 // initialize a new player and spawn them.
-                player = new EntityPlayer(joinLobby.username(), entityId, this::send);
+                player = new EntityPlayer(joinLobby.username(), entityId, sessionChannel);
                 player.location().set(420, 544);
 
                 lobby.spawnPlayerInLobby(player);
@@ -190,6 +194,11 @@ public final class GameServer {
         }
 
         @Override
+        public void handlePosition(ClientPosition position) {
+            if (lobbyIn != null) lobbyIn.onPlayerPosition(player, position.x(), position.y(), position.rotation());
+        }
+
+        @Override
         public void handleDisconnect() {
             if (player != null) {
                 if (lobbyIn != null) {
@@ -204,6 +213,10 @@ public final class GameServer {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            if (!(cause instanceof IOException)) {
+                cause.printStackTrace();
+            }
+
             handleDisconnect();
         }
 

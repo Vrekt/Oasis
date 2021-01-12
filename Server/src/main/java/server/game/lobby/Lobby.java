@@ -1,11 +1,11 @@
 package server.game.lobby;
 
-import protocol.packet.Packet;
 import protocol.packet.server.ServerCreatePlayer;
+import protocol.packet.server.ServerPlayerPosition;
 import protocol.packet.server.ServerPlayerVelocity;
 import protocol.packet.server.ServerRemovePlayer;
+import server.game.entity.packet.QueuedPlayerPacketUpdate;
 import server.game.entity.player.EntityPlayer;
-import server.game.entity.velocity.QueuedVelocityUpdate;
 
 import java.util.Map;
 import java.util.Queue;
@@ -24,9 +24,9 @@ public final class Lobby {
     private final Map<Integer, EntityPlayer> players = new ConcurrentHashMap<>();
 
     /**
-     * Velocity updates
+     * Queued player updates
      */
-    private final Queue<QueuedVelocityUpdate> queuedVelocityUpdates = new ConcurrentLinkedQueue<>();
+    private final Queue<QueuedPlayerPacketUpdate> queuedPlayerUpdates = new ConcurrentLinkedQueue<>();
 
     /**
      * The lobby ID.
@@ -111,29 +111,42 @@ public final class Lobby {
      * @param rotation  the rotation
      */
     public void onPlayerVelocity(EntityPlayer player, float velocityX, float velocityY, int rotation) {
-        queuedVelocityUpdates.add(new QueuedVelocityUpdate(player.entityId(), velocityX, velocityY, rotation));
+        queuedPlayerUpdates.add(new QueuedPlayerPacketUpdate(player.entityId(), ServerPlayerVelocity.encodeDirect(player.entityId(), velocityX, velocityY, rotation)));
+    }
+
+    /**
+     * Invoked when position is received
+     *
+     * @param player   player
+     * @param x        x
+     * @param y        y
+     * @param rotation rotation
+     */
+    public void onPlayerPosition(EntityPlayer player, float x, float y, int rotation) {
+        player.location().set(x, y);
+        queuedPlayerUpdates.add(new QueuedPlayerPacketUpdate(player.entityId(), ServerPlayerPosition.encodeDirect(player.entityId(), rotation, x, y)));
     }
 
     /**
      * Tick this lobby
      */
     public void tick() {
-        while (queuedVelocityUpdates.peek() != null) {
-            final QueuedVelocityUpdate update = queuedVelocityUpdates.poll();
-            broadcast(update.entityId(), new ServerPlayerVelocity(update.entityId(), update.velocityX(), update.velocityY(), update.rotationIndex()));
+        while (queuedPlayerUpdates.peek() != null) {
+            final QueuedPlayerPacketUpdate update = queuedPlayerUpdates.poll();
+            broadcastUpdate(update);
         }
     }
 
     /**
-     * Broadcast
+     * Broadcast update packet
+     * Players will miss updates while loading in.
      *
-     * @param exceptFor exception
-     * @param packet    the packet
+     * @param update the update packet
      */
-    public void broadcast(int exceptFor, Packet packet) {
-        players.forEach((i, player) -> {
-            if (i != exceptFor && player.isLoaded()) player.send(packet);
+    public void broadcastUpdate(QueuedPlayerPacketUpdate update) {
+        players.forEach((entityId, player) -> {
+            if (entityId != update.from() && player.isLoaded()) player.queue(update.direct());
         });
+        // update.release(); causes problems
     }
-
 }

@@ -1,10 +1,7 @@
 package protocol.packet.handlers;
 
 import protocol.packet.PacketHandler;
-import protocol.packet.client.ClientCreateLobby;
-import protocol.packet.client.ClientHandshake;
-import protocol.packet.client.ClientJoinLobby;
-import protocol.packet.client.ClientVelocity;
+import protocol.packet.client.*;
 
 /**
  * Handles packets received from the client.
@@ -43,6 +40,13 @@ public interface ClientPacketHandler extends PacketHandler {
      * Handle when a level is loaded.
      */
     void handleLevelLoaded();
+
+    /**
+     * Handle position packets
+     *
+     * @param position position
+     */
+    void handlePosition(ClientPosition position);
 
     /**
      * Handle a client disconnect.

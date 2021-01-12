@@ -103,6 +103,11 @@ public final class DefaultServerPacketHandler implements ServerPacketHandler {
     }
 
     @Override
+    public void handlePlayerPosition(ServerPlayerPosition position) {
+        game.world().updateNetworkPlayerPosition(position.entityId(), position.x(), position.y(), position.rotation());
+    }
+
+    @Override
     public void handleDisconnect(ServerDisconnect disconnect) {
         Gdx.app.log(TAG, "Disconnected from the server: " + disconnect.reason());
 

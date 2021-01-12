@@ -35,6 +35,8 @@ public final class ServerProtocolPacketDecoder extends LengthFieldBasedFrameDeco
             // retrieve packet from PID
             final int pid = buf.readByte() & 0xFF;
             Protocol.handleServerPacket(pid, buf, handler, ctx);
+        } else {
+            System.err.println("um buf is null");
         }
         return null;
     }

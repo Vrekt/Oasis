@@ -58,6 +58,13 @@ public interface ServerPacketHandler extends PacketHandler {
     void handlePlayerVelocity(ServerPlayerVelocity velocity);
 
     /**
+     * Handle player position
+     *
+     * @param position the position
+     */
+    void handlePlayerPosition(ServerPlayerPosition position);
+
+    /**
      * Handle disconnect
      *
      * @param disconnect the disconnect
