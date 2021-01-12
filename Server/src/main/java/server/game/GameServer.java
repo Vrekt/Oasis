@@ -53,13 +53,7 @@ public final class GameServer {
      * Tick lobbies
      */
     private void tickLobbies() {
-        lobbies.values().forEach(lobby -> {
-            try {
-                lobby.tick();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        lobbies.values().forEach(Lobby::tick);
     }
 
     /**

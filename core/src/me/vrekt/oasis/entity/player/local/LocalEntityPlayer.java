@@ -11,7 +11,6 @@ import me.vrekt.oasis.network.NetworkHandler;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The local player
@@ -93,13 +92,12 @@ public final class LocalEntityPlayer extends EntityPlayer {
         entityBody.setLinearVelocity(interpolatedVelocityX, interpolatedVelocityY);
 
         final long now = System.currentTimeMillis();
-        final long fakeLag = ThreadLocalRandom.current().nextInt(150, 350);
-        if (now - lastVelocitySend >= velocitySendRateMs + fakeLag) {
+        if (now - lastVelocitySend >= velocitySendRateMs) {
             network.networkVelocity(velocityX, velocityY, rotation);
             lastVelocitySend = now;
         }
 
-        if(now - lastPositionSend >= positionSendRateMs + fakeLag) {
+        if(now - lastPositionSend >= positionSendRateMs) {
             network.networkPosition(current.x, current.y, rotation);
             lastPositionSend = now;
         }

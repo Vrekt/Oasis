@@ -16,8 +16,14 @@ public final class NetworkEntityPlayer extends EntityPlayer {
      */
     private float velocityX, velocityY;
 
+    /**
+     * If position should be interpolated
+     */
     private boolean doPositionInterpolation;
 
+    /**
+     * The position to interpolate to.
+     */
     private float interpolateToX, interpolateToY;
 
     /**
