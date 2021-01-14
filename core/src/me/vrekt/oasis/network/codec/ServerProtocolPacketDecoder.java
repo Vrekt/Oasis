@@ -4,8 +4,8 @@ import com.badlogic.gdx.Gdx;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import me.vrekt.oasis.network.handler.DefaultServerPacketHandler;
 import protocol.Protocol;
+import protocol.packet.handlers.ServerPacketHandler;
 
 /**
  * Handles decoding local server packets
@@ -15,14 +15,14 @@ public final class ServerProtocolPacketDecoder extends LengthFieldBasedFrameDeco
     /**
      * The handler
      */
-    private final DefaultServerPacketHandler handler;
+    private final ServerPacketHandler handler;
 
     /**
      * Initialize this local decoder
      *
      * @param handler the handler
      */
-    public ServerProtocolPacketDecoder(DefaultServerPacketHandler handler) {
+    public ServerProtocolPacketDecoder(ServerPacketHandler handler) {
         super(Integer.MAX_VALUE, 0, 4);
         this.handler = handler;
     }
@@ -36,6 +36,8 @@ public final class ServerProtocolPacketDecoder extends LengthFieldBasedFrameDeco
             // retrieve packet from PID
             final int pid = buf.readByte() & 0xFF;
             Protocol.handleServerPacket(pid, buf, handler, ctx);
+
+            buf.release();
         } else {
             Gdx.app.log("Decoder", "Buffer from server is null?");
         }

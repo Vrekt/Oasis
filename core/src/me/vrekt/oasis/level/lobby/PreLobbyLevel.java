@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import me.vrekt.oasis.level.Level;
 import me.vrekt.oasis.level.world.LevelWorld;
+import protocol.packet.client.ClientLevelLoaded;
 
 /**
  * The level for the pre-game lobby.
@@ -23,12 +24,7 @@ public final class PreLobbyLevel extends Level {
 
     @Override
     public void show() {
-        final boolean result = load();
-        if (!result) {
-            // show main menu.
-            game.showMainMenuSync();
-            game.showDialog("Failed to load", "Failed to load the PreLobby.");
-        }
+        Gdx.app.log("PreLobby", "Showing pre-lobby");
     }
 
     @Override
@@ -44,17 +40,16 @@ public final class PreLobbyLevel extends Level {
             initializeLevelCamera();
             batch = new SpriteBatch();
             world = new LevelWorld();
-
             renderer.setView(camera);
 
-            thePlayer.spawnPlayerInWorld(world.box2dWorld(), new Vector2(420, 544));
-            thePlayer.createPlayerAnimations(game.assets().get("player/Character.atlas"));
+            thePlayer.spawnInWorld(world, new Vector2(420, 544));
+            thePlayer.createPlayerAnimations(game.assets().getAtlas("player/Character.atlas"));
             thePlayer.disableInputs(Input.Keys.W, Input.Keys.S);
 
             loaded = true;
             Gdx.app.log("PreLobbyLevel", "PreLobby loaded successfully, took " + (System.currentTimeMillis() - now) + " ms");
 
-            game.network().sendNetworkLoaded();
+            game.connection().send(new ClientLevelLoaded());
         } catch (Exception any) {
             Gdx.app.log("PreLobbyLevel", "Failed to load!", any);
             return false;

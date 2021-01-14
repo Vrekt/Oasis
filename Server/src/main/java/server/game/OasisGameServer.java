@@ -74,6 +74,7 @@ final class OasisGameServer implements Server {
     public void start() {
         lobbies.put(999, Lobby.createLobby(999));
         lastLobbyTick = System.currentTimeMillis();
+        lobbyTickTime = 0;
 
         service.execute(() -> {
             Thread.currentThread().setName("Oasis-Lobby-Tick");
@@ -112,7 +113,7 @@ final class OasisGameServer implements Server {
 
     @Override
     public int getNewLobbyId() {
-        return 999;
+        return lobbies.size() + 1 + ThreadLocalRandom.current().nextInt(1234, 8888);
     }
 
     @Override

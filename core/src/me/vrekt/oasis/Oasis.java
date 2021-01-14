@@ -1,18 +1,14 @@
 package me.vrekt.oasis;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.utils.Disposable;
+import io.netty.util.ResourceLeakDetector;
+import me.vrekt.oasis.asset.GameAssets;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
-import me.vrekt.oasis.level.Level;
-import me.vrekt.oasis.level.lobby.PreLobbyLevel;
-import me.vrekt.oasis.level.world.LevelWorld;
-import me.vrekt.oasis.network.NetworkHandler;
-import me.vrekt.oasis.screen.MainMenuScreen;
-
-import java.util.HashMap;
-import java.util.Map;
+import me.vrekt.oasis.level.LevelManager;
+import me.vrekt.oasis.network.Connection;
+import me.vrekt.oasis.network.Network;
+import me.vrekt.oasis.ui.menu.MainMenu;
 
 /**
  * Handles the game.
@@ -32,12 +28,12 @@ public final class Oasis implements Disposable {
     /**
      * The main menu
      */
-    private final MainMenuScreen mainMenu;
+    private final MainMenu mainMenu;
 
     /**
      * The network handler.
      */
-    private final NetworkHandler networkHandler;
+    private final Network network;
 
     /**
      * The player
@@ -45,46 +41,32 @@ public final class Oasis implements Disposable {
     private final LocalEntityPlayer thePlayer;
 
     /**
+     * Level manager
+     */
+    private final LevelManager levelManager;
+
+    /**
      * Asset manager
      */
-    private final AssetManager assetManager;
-
-    /**
-     * Levels
-     */
-    private final Map<String, Level> levels = new HashMap<>();
-
-    /**
-     * The current level.
-     */
-    private Level level;
+    private final GameAssets assets;
 
     /**
      * Initialize the game
      */
     public Oasis(OasisGameAdapter adapter) {
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
         if (thisInstance != null) throw new UnsupportedOperationException();
         thisInstance = this;
 
-        networkHandler = new NetworkHandler();
+        network = new Network();
         thePlayer = new LocalEntityPlayer();
-        mainMenu = new MainMenuScreen();
+        levelManager = new LevelManager();
+        mainMenu = new MainMenu();
 
-        assetManager = new AssetManager();
-        assetManager.load("player/Character.atlas", TextureAtlas.class);
-        assetManager.finishLoading();
-
-        initializeLevels();
-
+        assets = new GameAssets();
         adapter.setScreen(mainMenu);
     }
 
-    /**
-     * Initialize levels
-     */
-    private void initializeLevels() {
-        levels.put("PreLobby", new PreLobbyLevel());
-    }
 
     /**
      * @return the instance
@@ -96,8 +78,15 @@ public final class Oasis implements Disposable {
     /**
      * @return the network.
      */
-    public NetworkHandler network() {
-        return networkHandler;
+    public Network network() {
+        return network;
+    }
+
+    /**
+     * @return the network connection
+     */
+    public Connection connection() {
+        return network.connection();
     }
 
     /**
@@ -108,78 +97,56 @@ public final class Oasis implements Disposable {
     }
 
     /**
+     * @return the level manager
+     */
+    public LevelManager level() {
+        return levelManager;
+    }
+
+    /**
      * @return the assets
      */
-    public AssetManager assets() {
-        return assetManager;
+    public GameAssets assets() {
+        return assets;
     }
 
     /**
-     * Start a level
+     * Show the main menu
      */
-    public void startLevel(String levelName) {
-        level = levels.get(levelName);
-        Gdx.app.postRunnable(() -> OasisGameAdapter.get().setScreen(level));
+    public void showMainMenu() {
+        Gdx.app.postRunnable(() -> OasisGameAdapter.get().setScreen(mainMenu));
     }
 
     /**
-     * End the level
-     */
-    public void endLevel() {
-        showMainMenuAsync();
-        level.unload();
-        level.dispose();
-        level = null;
-    }
-
-    /**
-     * Show main menu
-     */
-    public void showMainMenuSync() {
-        OasisGameAdapter.get().setScreen(mainMenu);
-    }
-
-    /**
-     * Show main menu from another thread
-     */
-    public void showMainMenuAsync() {
-        Gdx.app.postRunnable(this::showMainMenuSync);
-    }
-
-    /**
-     * @return if we have a world.
-     */
-    public boolean hasWorld() {
-        return level != null && level.world() != null;
-    }
-
-    /**
-     * The current world we are in
+     * Show the main menu then execute a action
      *
-     * @return the world
+     * @param after the after
      */
-    public LevelWorld world() {
-        return level.world();
+    private void showMainMenuThen(Runnable after) {
+        Gdx.app.postRunnable(() -> {
+            if (OasisGameAdapter.get().getScreen() != mainMenu) {
+                OasisGameAdapter.get().setScreen(mainMenu);
+                after.run();
+            }
+        });
     }
 
     /**
-     * Show a dialog
-     * Most commonly for errors
+     * Show an error
      *
-     * @param title   the title
-     * @param message the message
+     * @param title the title
+     * @param error the error
      */
-    public void showDialog(String title, String message) {
-        mainMenu.showDialog(title, message);
+    public void showMainMenuWithError(String title, String error) {
+        showMainMenuThen(() -> mainMenu.showDialog(title, error));
     }
 
     @Override
     public void dispose() {
         mainMenu.dispose();
-        networkHandler.dispose();
+        network.dispose();
         thePlayer.dispose();
-        assetManager.dispose();
-        if (level != null)
-            level.dispose();
+        assets.dispose();
+        levelManager.dispose();
     }
 }

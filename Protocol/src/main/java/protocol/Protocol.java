@@ -79,6 +79,7 @@ public final class Protocol {
 
     /**
      * Handle a server packet
+     * The provided {@code in} buffer should be released by decoder.
      *
      * @param pid     the packet ID
      * @param in      the ByteBuf in
@@ -95,6 +96,7 @@ public final class Protocol {
 
     /**
      * Handle a client packet
+     * The provided {@code in} buffer should be released by the decoder.
      *
      * @param pid     the packet ID
      * @param in      the ByteBuf in

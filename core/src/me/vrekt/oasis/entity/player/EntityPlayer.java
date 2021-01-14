@@ -5,14 +5,19 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
 import me.vrekt.oasis.entity.Entity;
 import me.vrekt.oasis.entity.animated.AnimationController;
+import me.vrekt.oasis.level.world.LevelWorld;
 
 /**
  * Represents an entity that is a player.
  */
 public abstract class EntityPlayer extends Entity {
+
+    /**
+     * The username of the player
+     */
+    protected String username;
 
     /**
      * Controller
@@ -25,19 +30,41 @@ public abstract class EntityPlayer extends Entity {
     protected Vector2 previous, current;
 
     /**
+     * The world this player is in
+     */
+    protected LevelWorld worldIn;
+
+    /**
      * Initialize
      *
-     * @param entityName name
-     * @param entityId   ID
+     * @param entityId ID
      */
-    public EntityPlayer(String entityName, int entityId) {
-        super(entityName, entityId);
+    public EntityPlayer(int entityId) {
+        super(entityId);
     }
 
     /**
-     * Reset the player state.
+     * @return the username
      */
-    public abstract void resetState();
+    public String username() {
+        return username;
+    }
+
+    /**
+     * Set the username
+     *
+     * @param username username
+     */
+    public void username(String username) {
+        this.username = username;
+    }
+
+    /**
+     * @return the world in
+     */
+    public LevelWorld worldIn() {
+        return worldIn;
+    }
 
     /**
      * Create player animations
@@ -49,18 +76,21 @@ public abstract class EntityPlayer extends Entity {
     }
 
     /**
-     * Spawn the player in the provided world
+     * Spawn the player in the world
      *
-     * @param world    the world
-     * @param position the position
+     * @param world the world
+     * @param at    at
      */
-    public void spawnPlayerInWorld(World world, Vector2 position) {
+    @Override
+    public void spawnInWorld(LevelWorld world, Vector2 at) {
+        worldIn = world;
+
         final BodyDef definition = new BodyDef();
         definition.type = BodyDef.BodyType.DynamicBody;
         definition.fixedRotation = true;
-        definition.position.set(position);
+        definition.position.set(at);
 
-        entityBody = world.createBody(definition);
+        entityBody = world.box2dWorld().createBody(definition);
         final PolygonShape shape = new PolygonShape();
         shape.setAsBox(16, 16);
 
@@ -74,8 +104,8 @@ public abstract class EntityPlayer extends Entity {
         entityBody.createFixture(fixtureDef);
         shape.dispose();
 
-        previous = position;
-        current = position;
+        previous = at;
+        current = at;
     }
 
     @Override

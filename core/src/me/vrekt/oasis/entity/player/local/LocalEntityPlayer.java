@@ -4,10 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Interpolation;
-import me.vrekt.oasis.Oasis;
 import me.vrekt.oasis.entity.player.EntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
-import me.vrekt.oasis.network.NetworkHandler;
+import me.vrekt.oasis.network.Connection;
+import protocol.packet.client.ClientPosition;
+import protocol.packet.client.ClientVelocity;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -20,7 +21,7 @@ public final class LocalEntityPlayer extends EntityPlayer {
     /**
      * The ms send rate
      */
-    private final long velocitySendRateMs = 50, positionSendRateMs = 300;
+    private static final long VELOCITY_SEND_RATE_MS = 100, POSITION_SEND_RATE_MS = 200;
 
     /**
      * Last packet sends
@@ -28,9 +29,9 @@ public final class LocalEntityPlayer extends EntityPlayer {
     private long lastVelocitySend, lastPositionSend;
 
     /**
-     * Net handler
+     * This players connection
      */
-    private final NetworkHandler network;
+    private Connection connection;
 
     /**
      * Set of inputs disabled.
@@ -41,15 +42,16 @@ public final class LocalEntityPlayer extends EntityPlayer {
      * Empty player
      */
     public LocalEntityPlayer() {
-        super(null, -1);
-        network = Oasis.get().network();
+        super(-1);
     }
 
-    @Override
-    public void resetState() {
-        inputsDisabled.clear();
-        controller.reset();
-        entityBody = null;
+    /**
+     * Set the connection
+     *
+     * @param connection the connection
+     */
+    public void connection(Connection connection) {
+        this.connection = connection;
     }
 
     @Override
@@ -83,7 +85,6 @@ public final class LocalEntityPlayer extends EntityPlayer {
         final boolean hasMoved = velocityX != 0.0 || velocityY != 0.0;
 
         // the interpolated velocity for (hopefully) smooth movement
-        // TODO: Some hitches here and there but def better then not having this
         final float interpolatedVelocityX = velocityX == 0.0f ? 0.0f : Interpolation.linear.apply(previous.x, current.x, delta) * velocityX;
         final float interpolatedVelocityY = velocityY == 0.0f ? 0.0f : Interpolation.linear.apply(previous.y, current.y, delta) * velocityY;
 
@@ -91,14 +92,25 @@ public final class LocalEntityPlayer extends EntityPlayer {
         controller.update(rotation, hasMoved, false);
         entityBody.setLinearVelocity(interpolatedVelocityX, interpolatedVelocityY);
 
+        updateToNetwork(velocityX, velocityY);
+    }
+
+    /**
+     * Update networking
+     * TODO: Maybe write then flush next tick
+     *
+     * @param velocityX vel X
+     * @param velocityY vel Y
+     */
+    private void updateToNetwork(float velocityX, float velocityY) {
         final long now = System.currentTimeMillis();
-        if (now - lastVelocitySend >= velocitySendRateMs) {
-            network.networkVelocity(velocityX, velocityY, rotation);
+        if (now - lastVelocitySend >= VELOCITY_SEND_RATE_MS) {
+            connection.send(new ClientVelocity(velocityX, velocityY, rotation.ordinal()));
             lastVelocitySend = now;
         }
 
-        if(now - lastPositionSend >= positionSendRateMs) {
-            network.networkPosition(current.x, current.y, rotation);
+        if (now - lastPositionSend >= POSITION_SEND_RATE_MS) {
+            connection.send(new ClientPosition(rotation.ordinal(), current.x, current.y));
             lastPositionSend = now;
         }
     }
@@ -123,7 +135,7 @@ public final class LocalEntityPlayer extends EntityPlayer {
      * @param keys the keys
      */
     public void enableInputs(int... keys) {
-        for (int key : keys) inputsDisabled.remove(key);
+        for (int key : keys) if (inputsDisabled.contains(key)) inputsDisabled.remove((Integer) key);
     }
 
     /**

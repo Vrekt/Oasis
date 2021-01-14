@@ -14,6 +14,9 @@ public final class ClientDisconnect extends Packet {
      */
     public static final int PID = 4;
 
+    public ClientDisconnect() {
+    }
+
     /**
      * Initialize
      *

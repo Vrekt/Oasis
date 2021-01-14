@@ -27,9 +27,9 @@ public final class LevelWorld implements Disposable {
     private final World world;
 
     /**
-     * List of network players for this world
+     * List of players for this world
      */
-    private final Map<Integer, NetworkEntityPlayer> networkPlayers = new ConcurrentHashMap<>();
+    private final Map<Integer, NetworkEntityPlayer> players = new ConcurrentHashMap<>();
 
     /**
      * Game
@@ -61,9 +61,9 @@ public final class LevelWorld implements Disposable {
      * @param y      spawn Y
      */
     public void spawnPlayer(NetworkEntityPlayer player, float x, float y) {
-        networkPlayers.put(player.entityId(), player);
-        player.createPlayerAnimations(game.assets().get("player/Character.atlas"));
-        player.spawnPlayerInWorld(world, new Vector2(x, y));
+        players.put(player.entityId(), player);
+        player.createPlayerAnimations(game.assets().getAtlas("player/Character.atlas"));
+        player.spawnInWorld(this, new Vector2(x, y));
     }
 
     /**
@@ -72,37 +72,35 @@ public final class LevelWorld implements Disposable {
      * @param entityId the entity ID
      */
     public void removePlayer(int entityId) {
-        final NetworkEntityPlayer player = networkPlayers.remove(entityId);
+        final NetworkEntityPlayer player = players.remove(entityId);
         if (player != null) world.destroyBody(player.entityBody());
     }
 
     /**
-     * Update a network players velocity
+     * Update a players velocity
      *
      * @param entityId  entity ID
      * @param velocityX velocity X
      * @param velocityY velocity Y
      * @param rotation  the rotation
      */
-    public void updateNetworkPlayerVelocity(int entityId, float velocityX, float velocityY, int rotation) {
-        final NetworkEntityPlayer player = networkPlayers.get(entityId);
+    public void updatePlayerVelocity(int entityId, float velocityX, float velocityY, int rotation) {
+        final NetworkEntityPlayer player = players.get(entityId);
         if (player != null) {
             player.updateVelocity(velocityX, velocityY, Rotation.values()[rotation]);
-        } else {
-            // TODO: Network ask?
         }
     }
 
     /**
-     * Update a network players position
+     * Update a players position
      *
      * @param entityId the entity ID
      * @param x        x
      * @param y        y
      * @param rotation rotation
      */
-    public void updateNetworkPlayerPosition(int entityId, float x, float y, int rotation) {
-        final NetworkEntityPlayer player = networkPlayers.get(entityId);
+    public void updatePlayerPosition(int entityId, float x, float y, int rotation) {
+        final NetworkEntityPlayer player = players.get(entityId);
         if (player != null) {
             player.updatePosition(x, y, Rotation.values()[rotation]);
         }
@@ -120,7 +118,7 @@ public final class LevelWorld implements Disposable {
             worldStepAccumulator -= DEFAULT_STEP;
         }
 
-        networkPlayers.values().forEach(player -> player.update(delta));
+        players.forEach((id, player) -> player.update(delta));
     }
 
     /**
@@ -130,12 +128,12 @@ public final class LevelWorld implements Disposable {
      * @param batch the batch
      */
     public void render(float delta, SpriteBatch batch) {
-        networkPlayers.values().forEach(player -> player.render(delta, batch));
+        players.forEach((id, player) -> player.render(delta, batch));
     }
 
     @Override
     public void dispose() {
-        networkPlayers.clear();
+        players.clear();
         world.dispose();
     }
 }

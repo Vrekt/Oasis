@@ -7,6 +7,7 @@ import protocol.packet.server.ServerCreatePlayer;
 import protocol.packet.server.ServerPlayerPosition;
 import protocol.packet.server.ServerPlayerVelocity;
 import protocol.packet.server.ServerRemovePlayer;
+import server.game.Server;
 import server.game.entity.packet.QueuedPlayerPacketUpdate;
 import server.game.entity.player.EntityPlayer;
 
@@ -29,7 +30,7 @@ final class GameLobby implements Lobby {
     /**
      * Max packets to process per tick;
      */
-    private final int maxPacketsToProcessPerTick = 50;
+    private static final int MAX_PACKETS_PER_TICK = 50;
 
     /**
      * The players in this lobby
@@ -83,7 +84,14 @@ final class GameLobby implements Lobby {
     @Override
     public void removePlayerFromLobby(EntityPlayer player) {
         players.remove(player.entityId());
+        // TODO: Client issues?
+        player.flush();
 
+        if (players.size() == 0) {
+            // destroy this lobby.
+            // TODO: Destroy lobby in other means too.
+            Server.getServer().removeLobby(this);
+        }
         final ByteBuf packet = Packet.encodeDirect(new ServerRemovePlayer(player.entityId()));
         broadcast(packet);
     }
@@ -119,6 +127,11 @@ final class GameLobby implements Lobby {
             final QueuedPlayerPacketUpdate update = queuedPlayerUpdates.poll();
             broadcast(update.from(), update.direct());
             packets++;
+
+            if (packets >= MAX_PACKETS_PER_TICK) {
+                LOGGER.atInfo().log("Reached max packets to process per tick, %s", packets);
+                break;
+            }
         }
 
         if (packets > 0) LOGGER.atInfo().every(50).log("Wrote %s packets", packets);

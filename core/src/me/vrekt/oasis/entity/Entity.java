@@ -5,16 +5,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.utils.Disposable;
 import me.vrekt.oasis.entity.rotation.Rotation;
+import me.vrekt.oasis.level.world.LevelWorld;
 
 /**
  * Represents a bare-bones entity.
  */
 public abstract class Entity implements Disposable {
-
-    /**
-     * The name of this entity
-     */
-    private String entityName;
 
     /**
      * The ID of this entity.
@@ -39,11 +35,9 @@ public abstract class Entity implements Disposable {
     /**
      * Initialize this entity
      *
-     * @param entityName the name
      * @param entityId   the ID
      */
-    public Entity(String entityName, int entityId) {
-        this.entityName = entityName;
+    public Entity(int entityId) {
         this.entityId = entityId;
     }
 
@@ -63,26 +57,18 @@ public abstract class Entity implements Disposable {
     public abstract void render(float delta, SpriteBatch batch);
 
     /**
+     * Spawn this entity in the world
+     *
+     * @param world the world
+     * @param at    at
+     */
+    public abstract void spawnInWorld(LevelWorld world, Vector2 at);
+
+    /**
      * Reset velocity
      */
     protected void resetVelocity() {
         velocity.set(0, 0);
-    }
-
-    /**
-     * @return get the name of this entity
-     */
-    public String entityName() {
-        return entityName;
-    }
-
-    /**
-     * Set the name of this entity
-     *
-     * @param entityName the name
-     */
-    public void entityName(String entityName) {
-        this.entityName = entityName;
     }
 
     /**

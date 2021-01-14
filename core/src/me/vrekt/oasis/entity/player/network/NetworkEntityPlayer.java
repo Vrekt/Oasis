@@ -29,11 +29,12 @@ public final class NetworkEntityPlayer extends EntityPlayer {
     /**
      * Initialize
      *
-     * @param entityName name
-     * @param entityId   ID
+     * @param username their username
+     * @param entityId ID
      */
-    public NetworkEntityPlayer(String entityName, int entityId) {
-        super(entityName, entityId);
+    public NetworkEntityPlayer(String username, int entityId) {
+        super(entityId);
+        this.username = username;
     }
 
     /**
@@ -66,12 +67,6 @@ public final class NetworkEntityPlayer extends EntityPlayer {
             interpolateToX = x;
             interpolateToY = y;
         }
-    }
-
-    @Override
-    public void resetState() {
-        controller.reset();
-        entityBody = null;
     }
 
     @Override
