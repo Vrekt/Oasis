@@ -1,10 +1,8 @@
-package me.vrekt.oasis.network.codec;
+package me.vrekt.stresstest;
 
-import com.badlogic.gdx.Gdx;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import me.vrekt.oasis.network.handler.DefaultServerPacketHandler;
 import protocol.Protocol;
 
 /**
@@ -36,8 +34,8 @@ public final class ServerProtocolPacketDecoder extends LengthFieldBasedFrameDeco
             // retrieve packet from PID
             final int pid = buf.readByte() & 0xFF;
             Protocol.handleServerPacket(pid, buf, handler, ctx);
-        } else {
-            Gdx.app.log("Decoder", "Buffer from server is null?");
+
+            buf.release();
         }
         return null;
     }

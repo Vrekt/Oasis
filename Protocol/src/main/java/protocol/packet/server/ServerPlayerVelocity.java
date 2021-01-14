@@ -1,7 +1,6 @@
 package protocol.packet.server;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import protocol.packet.Packet;
 import protocol.packet.handlers.ServerPacketHandler;
 
@@ -25,43 +24,21 @@ public final class ServerPlayerVelocity extends Packet {
     /**
      * Rotation index
      */
-    private int rotationIndex;
-
-    /**
-     * Encode the packet
-     *
-     * @param entityId      EID
-     * @param velocityX     X
-     * @param velocityY     Y
-     * @param rotationIndex rotation index
-     * @return the byte buf
-     */
-    public static ByteBuf encodeDirect(int entityId, float velocityX, float velocityY, int rotationIndex) {
-        final ServerPlayerVelocity packet = new ServerPlayerVelocity(entityId, velocityX, velocityY, rotationIndex);
-        packet.encode();
-
-        final int length = packet.buffer.readableBytes();
-        final ByteBuf direct = Unpooled.buffer();
-
-        direct.writeInt(length);
-        direct.writeBytes(packet.buffer);
-        packet.dispose();
-        return direct;
-    }
+    private int rotation;
 
     /**
      * Initialize
      *
-     * @param entityId      the entity ID
-     * @param velocityX     velocity X
-     * @param velocityY     velocity Y
-     * @param rotationIndex rotation index
+     * @param entityId  the entity ID
+     * @param velocityX velocity X
+     * @param velocityY velocity Y
+     * @param rotation  rotation index
      */
-    public ServerPlayerVelocity(int entityId, float velocityX, float velocityY, int rotationIndex) {
+    public ServerPlayerVelocity(int entityId, float velocityX, float velocityY, int rotation) {
         this.entityId = entityId;
         this.velocityX = velocityX;
         this.velocityY = velocityY;
-        this.rotationIndex = rotationIndex;
+        this.rotation = rotation;
     }
 
     /**
@@ -99,8 +76,8 @@ public final class ServerPlayerVelocity extends Packet {
     /**
      * @return the rotation value
      */
-    public int rotationIndex() {
-        return rotationIndex;
+    public int rotation() {
+        return rotation;
     }
 
     @Override
@@ -115,7 +92,7 @@ public final class ServerPlayerVelocity extends Packet {
         writeInt(entityId);
         writeFloat(velocityX);
         writeFloat(velocityY);
-        writeInt(rotationIndex);
+        writeInt(rotation);
     }
 
     @Override
@@ -123,7 +100,7 @@ public final class ServerPlayerVelocity extends Packet {
         entityId = readInt();
         velocityX = readFloat();
         velocityY = readFloat();
-        rotationIndex = readInt();
+        rotation = readInt();
     }
 
 }

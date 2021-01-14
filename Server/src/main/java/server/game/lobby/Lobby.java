@@ -1,152 +1,89 @@
 package server.game.lobby;
 
-import protocol.packet.server.ServerCreatePlayer;
-import protocol.packet.server.ServerPlayerPosition;
-import protocol.packet.server.ServerPlayerVelocity;
-import protocol.packet.server.ServerRemovePlayer;
-import server.game.entity.packet.QueuedPlayerPacketUpdate;
 import server.game.entity.player.EntityPlayer;
-
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ThreadLocalRandom;
+import server.game.utilities.Disposable;
 
 /**
- * Represents a game lobby.
+ * Represents a game lobby
  */
-public final class Lobby {
+public interface Lobby extends Disposable {
 
     /**
-     * The players in this lobby
+     * Spawning positions of every lobby
      */
-    private final Map<Integer, EntityPlayer> players = new ConcurrentHashMap<>();
+    float SPAWN_X = 420, SPAWN_Y = 544;
 
     /**
-     * Queued player updates
-     */
-    private final Queue<QueuedPlayerPacketUpdate> queuedPlayerUpdates = new ConcurrentLinkedQueue<>();
-
-    /**
-     * The lobby ID.
-     */
-    private final int lobbyId;
-
-    /**
-     * Initialize
+     * Create a new lobby
      *
-     * @param lobbyId the lobby ID
+     * @param lobbyId the ID
+     * @return a new lobby
      */
-    public Lobby(int lobbyId) {
-        this.lobbyId = lobbyId;
+    static Lobby createLobby(int lobbyId) {
+        return new GameLobby(lobbyId);
     }
 
     /**
-     * @return the lobby ID
+     * @return the ID of this lobby
      */
-    public int lobbyId() {
-        return lobbyId;
-    }
+    int lobbyId();
 
     /**
-     * Create a new unique entity ID
+     * @return a newly generated entity ID.
      */
-    public int assignUniqueEntityId() {
-        return players.size() + 1 + ThreadLocalRandom.current().nextInt(111, 999);
-    }
+    int getNewEntityId();
 
     /**
-     * Spawn a player in the lobby
-     * TODO: Send direct without encoding the packet each time.
-     * TODO: For now 420, 544
-     * TODO: Bulk entity send?
+     * Check if this player can join the lobby
+     * @param username their username
+     * @return {@code true} if so
+     */
+    boolean canJoinLobby(String username);
+
+    /**
+     * Spawn a player in this lobby
      *
      * @param player the player
      */
-    public void spawnPlayerInLobby(EntityPlayer player) {
-        if (players.size() > 0) {
-            // create the packet
-            // iterate through all existing players and send them the new player,
-            final ServerCreatePlayer packetPlayer = new ServerCreatePlayer(player.entityName(), player.entityId(), player.x(), player.y());
-            players.forEach((id, existingPlayer) -> existingPlayer.send(packetPlayer));
-        }
-
-        players.put(player.entityId(), player);
-    }
+    void spawnPlayerInLobby(EntityPlayer player);
 
     /**
-     * Remove a player
-     *
-     * @param entityId the entity ID
-     */
-    public void removePlayer(int entityId) {
-        players.remove(entityId);
-
-        final ServerRemovePlayer packet = new ServerRemovePlayer(entityId);
-        players.forEach((id, player) -> player.send(packet));
-    }
-
-    /**
-     * Invoked when the player loads in.
+     * Remove a player from this lobby
      *
      * @param player the player
      */
-    public void onPlayerLoaded(EntityPlayer player) {
-        player.isLoaded(true);
-
-        players.values().forEach(existingPlayer -> {
-            if (existingPlayer.entityId() != player.entityId()) {
-                player.send(new ServerCreatePlayer(existingPlayer.entityName(), existingPlayer.entityId(), existingPlayer.x(), existingPlayer.y()));
-            }
-        });
-    }
+    void removePlayerFromLobby(EntityPlayer player);
 
     /**
-     * Invoked when a velocity is received
+     * Handle when a player is loaded.
+     *
+     * @param player the player
+     */
+    void handlePlayerLoaded(EntityPlayer player);
+
+    /**
+     * Handle a players velocity update
      *
      * @param player    the player
-     * @param velocityX the X velocity
-     * @param velocityY the Y velocity
+     * @param velocityX their X velocity
+     * @param velocityY their Y velocity
      * @param rotation  the rotation
      */
-    public void onPlayerVelocity(EntityPlayer player, float velocityX, float velocityY, int rotation) {
-        queuedPlayerUpdates.add(new QueuedPlayerPacketUpdate(player.entityId(), ServerPlayerVelocity.encodeDirect(player.entityId(), velocityX, velocityY, rotation)));
-    }
+    void handlePlayerVelocityUpdate(EntityPlayer player, float velocityX, float velocityY, int rotation);
 
     /**
-     * Invoked when position is received
+     * Handle a players position update
      *
-     * @param player   player
-     * @param x        x
-     * @param y        y
-     * @param rotation rotation
+     * @param player   the player
+     * @param x        their X velocity
+     * @param y        their Y velocity
+     * @param rotation the rotation
      */
-    public void onPlayerPosition(EntityPlayer player, float x, float y, int rotation) {
-        player.location().set(x, y);
-        queuedPlayerUpdates.add(new QueuedPlayerPacketUpdate(player.entityId(), ServerPlayerPosition.encodeDirect(player.entityId(), rotation, x, y)));
-    }
+    void handlePlayerPositionUpdate(EntityPlayer player, float x, float y, int rotation);
 
     /**
      * Tick this lobby
      */
-    public void tick() {
-        while (queuedPlayerUpdates.peek() != null) {
-            final QueuedPlayerPacketUpdate update = queuedPlayerUpdates.poll();
-            broadcastUpdate(update);
-        }
-    }
+    void tick();
 
-    /**
-     * Broadcast update packet
-     * Players will miss updates while loading in.
-     *
-     * @param update the update packet
-     */
-    public void broadcastUpdate(QueuedPlayerPacketUpdate update) {
-        players.forEach((entityId, player) -> {
-            if (entityId != update.from() && player.isLoaded()) player.queue(update.direct());
-        });
-        // update.release(); causes problems
-    }
 }

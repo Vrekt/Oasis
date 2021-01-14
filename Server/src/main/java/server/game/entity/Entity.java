@@ -1,7 +1,7 @@
 package server.game.entity;
 
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Disposable;
+import server.game.location.Location;
+import server.game.utilities.Disposable;
 
 /**
  * Represents a bare bones entity
@@ -11,7 +11,7 @@ public abstract class Entity implements Disposable {
     /**
      * The location of this entity
      */
-    protected final Vector2 location = new Vector2();
+    protected final Location location = new Location();
 
     /**
      * The entity name
@@ -57,7 +57,7 @@ public abstract class Entity implements Disposable {
     /**
      * @return the entity location
      */
-    public Vector2 location() {
+    public Location location() {
         return location;
     }
 
@@ -74,4 +74,15 @@ public abstract class Entity implements Disposable {
     public float y() {
         return location.y;
     }
+
+    /**
+     * Set location
+     *
+     * @param x x
+     * @param y y
+     */
+    public void setLocation(float x, float y) {
+        location.set(x, y);
+    }
+
 }

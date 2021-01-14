@@ -88,7 +88,6 @@ public final class Protocol {
     public static void handleServerPacket(int pid, ByteBuf in, ServerPacketHandler handler, ChannelHandlerContext context) {
         try {
             SERVER_PACKETS.get(pid).accept(in, handler);
-            in.release();
         } catch (Exception exception) {
             context.fireExceptionCaught(exception);
         }
@@ -105,7 +104,6 @@ public final class Protocol {
     public static void handleClientPacket(int pid, ByteBuf in, ClientPacketHandler handler, ChannelHandlerContext context) {
         try {
             CLIENT_PACKETS.get(pid).accept(in, handler);
-            in.release();
         } catch (Exception exception) {
             context.fireExceptionCaught(exception);
         }

@@ -11,9 +11,9 @@ public interface ClientPacketHandler extends PacketHandler {
     /**
      * Handle a handshake packet
      *
-     * @param packet the packet
+     * @param handshake the handshake
      */
-    void handleHandshake(ClientHandshake packet);
+    void handleHandshake(ClientHandshake handshake);
 
     /**
      * Handle creating a lobby.

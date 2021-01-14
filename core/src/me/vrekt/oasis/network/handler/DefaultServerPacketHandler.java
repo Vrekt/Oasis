@@ -99,7 +99,7 @@ public final class DefaultServerPacketHandler implements ServerPacketHandler {
 
     @Override
     public void handlePlayerVelocity(ServerPlayerVelocity velocity) {
-        game.world().updateNetworkPlayerVelocity(velocity.entityId(), velocity.velocityX(), velocity.velocityY(), velocity.rotationIndex());
+        game.world().updateNetworkPlayerVelocity(velocity.entityId(), velocity.velocityX(), velocity.velocityY(), velocity.rotation());
     }
 
     @Override

@@ -15,6 +15,23 @@ public abstract class Packet {
      */
     protected ByteBuf buffer;
 
+    /**
+     * Encode a packet
+     *
+     * @param packet the packet
+     * @return the byte buf
+     */
+    public static ByteBuf encodeDirect(Packet packet) {
+        packet.encode();
+
+        final int length = packet.buffer.readableBytes();
+        final ByteBuf direct = Unpooled.buffer();
+        direct.writeInt(length);
+        direct.writeBytes(packet.buffer);
+        packet.dispose();
+        return direct;
+    }
+
     public Packet(ByteBuf buffer) {
         this.buffer = buffer;
         decode();

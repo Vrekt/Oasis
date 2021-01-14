@@ -80,8 +80,6 @@ public final class NetworkEntityPlayer extends EntityPlayer {
         previous = current;
         current = entityBody.getPosition().cpy();
 
-        // TODO: Needs work i think
-        // TODO: Tmw
         if (doPositionInterpolation) {
             final Vector2 to = new Vector2(interpolateToX, interpolateToY);
             current.interpolate(to, delta, Interpolation.linear);

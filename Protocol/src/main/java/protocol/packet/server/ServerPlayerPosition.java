@@ -32,7 +32,7 @@ public final class ServerPlayerPosition extends Packet {
      * @param y        Y
      * @return the byte buf
      */
-    public static ByteBuf encodeDirect(int entityId, int rotation, float x, float y) {
+    public static ByteBuf encodeNow(int entityId, int rotation, float x, float y) {
         try {
             final ServerPlayerPosition packet = new ServerPlayerPosition(entityId, rotation, x, y);
             packet.encode();

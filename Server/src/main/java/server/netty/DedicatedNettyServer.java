@@ -9,8 +9,9 @@ import io.netty.channel.socket.SocketChannel;
 import protocol.Protocol;
 import protocol.channel.ServerChannels;
 import protocol.codec.ProtocolPacketEncoder;
-import server.game.GameServer;
+import server.game.Server;
 import server.netty.codec.ClientProtocolPacketDecoder;
+import server.netty.session.PlayerNetworkSession;
 
 public class DedicatedNettyServer {
 
@@ -23,11 +24,6 @@ public class DedicatedNettyServer {
      * The netty group
      */
     private final EventLoopGroup parent, child;
-
-    /**
-     * the game server
-     */
-    private final GameServer gameServer;
 
     public static void main(String[] args) throws InterruptedException {
         new DedicatedNettyServer().bind(args[0], Integer.parseInt(args[1]));
@@ -54,7 +50,6 @@ public class DedicatedNettyServer {
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.TCP_NODELAY, true);
 
-        gameServer = new GameServer();
         Protocol.initialize();
     }
 
@@ -64,7 +59,7 @@ public class DedicatedNettyServer {
      * @param channel the channel
      */
     private void handleSocketConnection(SocketChannel channel) {
-        final GameServer.LocalGameServerSession session = gameServer.createSession(channel);
+        final PlayerNetworkSession session = new PlayerNetworkSession(channel);
 
         channel.pipeline().addLast(new ClientProtocolPacketDecoder(session));
         channel.pipeline().addLast(new ProtocolPacketEncoder());
@@ -84,9 +79,11 @@ public class DedicatedNettyServer {
         try {
             final ChannelFuture future = bootstrap.bind(address, port).sync();
             System.err.println("Bounded to " + address + ":" + port + " successfully.");
+            Server.getServer().start();
 
             future.channel().closeFuture().sync();
         } finally {
+            Server.getServer().stop();
             child.shutdownGracefully();
             parent.shutdownGracefully();
         }

@@ -22,14 +22,20 @@ public final class ClientProtocolPacketDecoder extends LengthFieldBasedFrameDeco
     }
 
     @Override
-    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        final ByteBuf buf = (ByteBuf) super.decode(ctx, in);
-        if (buf != null) {
-            // ignore the length of the packet.
-            buf.readInt();
-            // retrieve packet from PID
-            final int pid = buf.readByte() & 0xFF;
-            if (Protocol.isClientPacket(pid)) Protocol.handleClientPacket(pid, buf, handler, ctx);
+    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) {
+        try {
+            final ByteBuf buf = (ByteBuf) super.decode(ctx, in);
+            if (buf != null) {
+                // ignore the length of the packet.
+                buf.readInt();
+                // retrieve packet from PID
+                final int pid = buf.readByte() & 0xFF;
+                if (Protocol.isClientPacket(pid)) Protocol.handleClientPacket(pid, buf, handler, ctx);
+
+                buf.release();
+            }
+        } catch (Exception any) {
+            ctx.fireExceptionCaught(any);
         }
         return null;
     }

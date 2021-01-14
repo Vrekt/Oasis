@@ -111,11 +111,11 @@ public final class NetworkHandler implements Disposable {
     }
 
     /**
-     * TODO: For now 9999
+     * TODO: For now 999
      */
     public void networkJoinLobby() {
         Gdx.app.log(TAG, "Attempting to join lobby 9999");
-        sendChannel.writeAndFlush(new ClientJoinLobby(Oasis.get().thePlayer().entityName(), 9999));
+        sendChannel.writeAndFlush(new ClientJoinLobby(Oasis.get().thePlayer().entityName(), 999));
     }
 
     /**

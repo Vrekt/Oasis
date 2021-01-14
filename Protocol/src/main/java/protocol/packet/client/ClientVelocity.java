@@ -17,21 +17,21 @@ public final class ClientVelocity extends Packet {
     private float velocityX, velocityY;
 
     /**
-     * Rotation index
+     * Rotation
      */
-    private int rotationIndex;
+    private int rotation;
 
     /**
      * Initialize
      *
-     * @param velocityX     velocity X
-     * @param velocityY     velocity Y
-     * @param rotationIndex rotation index
+     * @param velocityX velocity X
+     * @param velocityY velocity Y
+     * @param rotation  rotation
      */
-    public ClientVelocity(float velocityX, float velocityY, int rotationIndex) {
+    public ClientVelocity(float velocityX, float velocityY, int rotation) {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
-        this.rotationIndex = rotationIndex;
+        this.rotation = rotation;
     }
 
     /**
@@ -62,8 +62,8 @@ public final class ClientVelocity extends Packet {
     /**
      * @return the rotation value
      */
-    public int rotationIndex() {
-        return rotationIndex;
+    public int rotation() {
+        return rotation;
     }
 
     @Override
@@ -77,13 +77,13 @@ public final class ClientVelocity extends Packet {
         writePid();
         writeFloat(velocityX);
         writeFloat(velocityY);
-        writeInt(rotationIndex);
+        writeInt(rotation);
     }
 
     @Override
     public void decode() {
         velocityX = readFloat();
         velocityY = readFloat();
-        rotationIndex = readInt();
+        rotation = readInt();
     }
 }

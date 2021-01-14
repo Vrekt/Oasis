@@ -42,11 +42,4 @@ public final class QueuedPlayerPacketUpdate {
         return direct;
     }
 
-    /**
-     * Release the update.
-     */
-    public void release() {
-        direct.release();
-    }
-
 }

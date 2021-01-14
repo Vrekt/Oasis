@@ -3,7 +3,9 @@ package server.game.entity.player;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import protocol.packet.Packet;
+import protocol.packet.server.ServerDisconnect;
 import server.game.entity.Entity;
+import server.game.lobby.Lobby;
 
 
 /**
@@ -22,6 +24,11 @@ public final class EntityPlayer extends Entity {
     private boolean isLoaded;
 
     /**
+     * The lobby the player is in.
+     */
+    private Lobby lobbyIn;
+
+    /**
      * Initialize
      *
      * @param entityName name
@@ -33,39 +40,95 @@ public final class EntityPlayer extends Entity {
     }
 
     /**
-     * Send a packet
+     * Send a packet now
      *
      * @param packet the packet
      */
-    public void send(Packet packet) {
+    public void sendNow(Packet packet) {
         channel.writeAndFlush(packet);
     }
 
     /**
-     * Send a direct buffer
+     * Queue a packet
      *
-     * @param direct direct
+     * @param packet the packet
      */
-    public void queue(ByteBuf direct) {
-       channel.writeAndFlush(direct);
-    }
-
-    public void flush() {
-     //   channel.flush();
+    public void queue(Packet packet) {
+        channel.write(packet);
     }
 
     /**
-     * @return if the player is loaded
+     * Queue a direct buffer
+     *
+     * @param direct buffer
+     */
+    public void queue(ByteBuf direct) {
+        channel.write(direct);
+    }
+
+    /**
+     * Flush
+     */
+    public void flush() {
+        channel.flush();
+    }
+
+    /**
+     * @return the lobby the player is in.
+     */
+    public Lobby lobbyIn() {
+        return lobbyIn;
+    }
+
+    /**
+     * @return {@code true} if this player is in a lobby
+     */
+    public boolean inLobby() {
+        return lobbyIn != null;
+    }
+
+    /**
+     * Set this player in a lobby
+     *
+     * @param lobbyIn the lobby
+     */
+    public void setInLobby(Lobby lobbyIn) {
+        this.lobbyIn = lobbyIn;
+    }
+
+    /**
+     * @return if this player is loaded.
      */
     public boolean isLoaded() {
         return isLoaded;
     }
 
     /**
-     * @param loaded set loaded
+     * Set if this player is loaded
+     *
+     * @param loaded loaded
      */
-    public void isLoaded(boolean loaded) {
-        isLoaded = loaded;
+    public void setLoaded(boolean loaded) {
+        this.isLoaded = loaded;
+    }
+
+    /**
+     * Kick this player
+     *
+     * @param reason the reason
+     */
+    public void kick(String reason) {
+        sendNow(new ServerDisconnect(reason));
+        disconnect();
+        channel.close();
+        dispose();
+    }
+
+    /**
+     * Disconnect this player
+     */
+    public void disconnect() {
+        if (lobbyIn != null) lobbyIn.removePlayerFromLobby(this);
     }
 
     @Override
@@ -75,6 +138,6 @@ public final class EntityPlayer extends Entity {
 
     @Override
     public void dispose() {
-
+        lobbyIn = null;
     }
 }

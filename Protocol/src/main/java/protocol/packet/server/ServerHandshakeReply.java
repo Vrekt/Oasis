@@ -38,6 +38,15 @@ public final class ServerHandshakeReply extends Packet {
     /**
      * Initialize
      *
+     * @param allowed          if the client is allowed to join the server
+     */
+    public ServerHandshakeReply(boolean allowed) {
+        this(allowed, "");
+    }
+
+    /**
+     * Initialize
+     *
      * @param buffer  buffer
      * @param handler handler
      */
