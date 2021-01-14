@@ -12,6 +12,8 @@ Still working out what I want the game to be, but some of these elements:
 - NPCs
 - Note taking/collecting
 
+**Click below to see a current Demo as of 1/14/2021**
+
 [![Demo](http://img.youtube.com/vi/rhNCpIIdMwg/0.jpg)](http://www.youtube.com/watch?v=rhNCpIIdMwg "Multiplayer Game Demo")
   
 # TODO
