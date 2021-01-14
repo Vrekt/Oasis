@@ -17,12 +17,19 @@ public final class ClientCreateLobby extends Packet {
     private String username;
 
     /**
+     * The character type
+     */
+    private int character;
+
+    /**
      * Initialize
      *
-     * @param username the username
+     * @param username  the username
+     * @param character their character
      */
-    public ClientCreateLobby(String username) {
+    public ClientCreateLobby(String username, int character) {
         this.username = username;
+        this.character = character;
     }
 
     /**
@@ -43,6 +50,13 @@ public final class ClientCreateLobby extends Packet {
         return username;
     }
 
+    /**
+     * @return the character
+     */
+    public int character() {
+        return character;
+    }
+
     @Override
     public int pid() {
         return PID;
@@ -53,10 +67,12 @@ public final class ClientCreateLobby extends Packet {
         createBuffer();
         writePid();
         writeString(username);
+        writeInt(character);
     }
 
     @Override
     public void decode() {
         username = readString();
+        character = readInt();
     }
 }

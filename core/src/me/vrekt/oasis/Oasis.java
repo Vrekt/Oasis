@@ -61,12 +61,11 @@ public final class Oasis implements Disposable {
         network = new Network();
         thePlayer = new LocalEntityPlayer();
         levelManager = new LevelManager();
-        mainMenu = new MainMenu();
-
         assets = new GameAssets();
+
+        mainMenu = new MainMenu();
         adapter.setScreen(mainMenu);
     }
-
 
     /**
      * @return the instance

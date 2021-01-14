@@ -18,8 +18,9 @@ public final class ServerCreatePlayer extends Packet {
 
     /**
      * Entity ID
+     * Character
      */
-    private int entityId;
+    private int entityId, character;
 
     /**
      * Spawning location
@@ -29,13 +30,15 @@ public final class ServerCreatePlayer extends Packet {
     /**
      * Initialize
      *
-     * @param username username
-     * @param entityId ID
-     * @param x        starting X
-     * @param y        starting Y
+     * @param username  username
+     * @param character character
+     * @param entityId  ID
+     * @param x         starting X
+     * @param y         starting Y
      */
-    public ServerCreatePlayer(String username, int entityId, float x, float y) {
+    public ServerCreatePlayer(String username, int character, int entityId, float x, float y) {
         this.username = username;
+        this.character = character;
         this.entityId = entityId;
         this.x = x;
         this.y = y;
@@ -57,6 +60,13 @@ public final class ServerCreatePlayer extends Packet {
      */
     public String username() {
         return username;
+    }
+
+    /**
+     * @return the character
+     */
+    public int character() {
+        return character;
     }
 
     /**
@@ -90,6 +100,7 @@ public final class ServerCreatePlayer extends Packet {
         createBuffer();
         writePid();
         writeString(username);
+        writeInt(character);
         writeInt(entityId);
         writeFloat(x);
         writeFloat(y);
@@ -98,6 +109,7 @@ public final class ServerCreatePlayer extends Packet {
     @Override
     public void decode() {
         username = readString();
+        character = readInt();
         entityId = readInt();
         x = readFloat();
         y = readFloat();

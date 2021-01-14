@@ -4,11 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import me.vrekt.oasis.level.Level;
 import me.vrekt.oasis.level.world.LevelWorld;
 import protocol.packet.client.ClientLevelLoaded;
@@ -17,6 +19,11 @@ import protocol.packet.client.ClientLevelLoaded;
  * The level for the pre-game lobby.
  */
 public final class PreLobbyLevel extends Level {
+
+    /**
+     * The drawing location for the lobby code text
+     */
+    private final Vector3 lobbyIdText = new Vector3(710f, 5f, 0f);
 
     public PreLobbyLevel() {
         super("PreLobby");
@@ -39,11 +46,13 @@ public final class PreLobbyLevel extends Level {
             // in the future, custom renderer
             initializeLevelCamera();
             batch = new SpriteBatch();
+            font = new BitmapFont(Gdx.files.internal("ui/alagard_by_pix3m-d6awiwp.fnt"));
+
             world = new LevelWorld();
             renderer.setView(camera);
 
             thePlayer.spawnInWorld(world, new Vector2(420, 544));
-            thePlayer.createPlayerAnimations(game.assets().getAtlas("player/Character.atlas"));
+            thePlayer.createPlayerAnimations();
             thePlayer.disableInputs(Input.Keys.W, Input.Keys.S);
 
             loaded = true;
@@ -109,8 +118,11 @@ public final class PreLobbyLevel extends Level {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        world.render(delta, batch);
+        world.render(delta, batch, font);
         thePlayer.render(delta, batch);
+
+        final Vector3 location = camera.unproject(new Vector3(710, 5f, 0));
+        font.draw(batch, "Lobby: " + thePlayer.lobbyIn(), location.x, location.y);
         batch.end();
     }
 

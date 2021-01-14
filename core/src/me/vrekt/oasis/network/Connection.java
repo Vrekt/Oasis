@@ -67,22 +67,24 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     /**
      * Create a lobby
      *
-     * @param username the username
+     * @param username  the username
+     * @param character the character type
      */
-    public void createLobby(String username) {
-        Gdx.app.log(TAG, "Attempting to create a new lobby; username=" + username);
-        channel.writeAndFlush(new ClientCreateLobby(username));
+    public void createLobby(String username, int character) {
+        Gdx.app.log(TAG, "Attempting to create a new lobby; username=" + username + "; with character=" + character);
+        channel.writeAndFlush(new ClientCreateLobby(username, character));
     }
 
     /**
      * Join a lobby
      *
-     * @param username their username
-     * @param lobbyId  the lobby ID
+     * @param username  their username
+     * @param character the character ID
+     * @param lobbyId   the lobby ID
      */
-    public void joinLobby(String username, int lobbyId) {
+    public void joinLobby(String username, int character, int lobbyId) {
         Gdx.app.log(TAG, "Attempting to join lobby " + lobbyId);
-        channel.writeAndFlush(new ClientJoinLobby(username, lobbyId));
+        channel.writeAndFlush(new ClientJoinLobby(username, character, lobbyId));
     }
 
     /**
@@ -108,6 +110,7 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
         if (reply.allowed()) {
             Gdx.app.log(TAG, "Initializing local player with ID: " + reply.entityId() + " in lobby " + reply.lobbyId());
             thePlayer.entityId(reply.entityId());
+            thePlayer.lobbyIn(reply.lobbyId());
         } else {
             game.showMainMenuWithError("Could not create lobby", "Could not create a new lobby! Reason:\n" + reply.notAllowedReason());
         }
@@ -116,7 +119,7 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     @Override
     public void handleCreatePlayer(ServerCreatePlayer createPlayer) {
         Gdx.app.log(TAG, "Creating a new network player username=" + createPlayer.username() + ", eid=" + createPlayer.entityId());
-        thePlayer.worldIn().spawnPlayer(new NetworkEntityPlayer(createPlayer.username(), createPlayer.entityId()), createPlayer.x(), createPlayer.y());
+        thePlayer.worldIn().spawnPlayer(new NetworkEntityPlayer(createPlayer.username(), createPlayer.character(), createPlayer.entityId()), createPlayer.x(), createPlayer.y());
     }
 
     @Override
@@ -130,6 +133,7 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
         if (reply.allowed()) {
             Gdx.app.log(TAG, "Initializing local player with ID: " + reply.entityId());
             thePlayer.entityId(reply.entityId());
+            thePlayer.lobbyIn(reply.lobbyId());
         } else {
             game.showMainMenuWithError("Could not join lobby", "Could not join the lobby Reason:\n" + reply.notAllowedReason());
         }

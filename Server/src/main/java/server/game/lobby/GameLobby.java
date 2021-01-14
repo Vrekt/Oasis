@@ -74,7 +74,7 @@ final class GameLobby implements Lobby {
     @Override
     public void spawnPlayerInLobby(EntityPlayer player) {
         if (!players.isEmpty()) {
-            final ByteBuf packet = Packet.encodeDirect(new ServerCreatePlayer(player.entityName(), player.entityId(), player.x(), player.y()));
+            final ByteBuf packet = Packet.encodeDirect(new ServerCreatePlayer(player.entityName(), player.character(), player.entityId(), player.x(), player.y()));
             broadcast(packet);
         }
 
@@ -100,7 +100,7 @@ final class GameLobby implements Lobby {
     public void handlePlayerLoaded(EntityPlayer player) {
         players.forEach((entityId, existing) -> {
             if (existing.entityId() != player.entityId()) {
-                player.queue(new ServerCreatePlayer(existing.entityName(), existing.entityId(), existing.x(), existing.y()));
+                player.queue(new ServerCreatePlayer(existing.entityName(), existing.character(), existing.entityId(), existing.x(), existing.y()));
             }
         });
     }

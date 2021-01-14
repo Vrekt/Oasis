@@ -1,10 +1,10 @@
 package me.vrekt.oasis.level.world;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
-import me.vrekt.oasis.Oasis;
 import me.vrekt.oasis.entity.player.network.NetworkEntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
 
@@ -32,18 +32,12 @@ public final class LevelWorld implements Disposable {
     private final Map<Integer, NetworkEntityPlayer> players = new ConcurrentHashMap<>();
 
     /**
-     * Game
-     */
-    private final Oasis game;
-
-    /**
      * Accumulator
      */
     private float worldStepAccumulator;
 
     public LevelWorld() {
         world = new World(new Vector2(0, 0), true);
-        game = Oasis.get();
     }
 
     /**
@@ -62,7 +56,7 @@ public final class LevelWorld implements Disposable {
      */
     public void spawnPlayer(NetworkEntityPlayer player, float x, float y) {
         players.put(player.entityId(), player);
-        player.createPlayerAnimations(game.assets().getAtlas("player/Character.atlas"));
+        player.createPlayerAnimations();
         player.spawnInWorld(this, new Vector2(x, y));
     }
 
@@ -127,8 +121,11 @@ public final class LevelWorld implements Disposable {
      * @param delta the delta
      * @param batch the batch
      */
-    public void render(float delta, SpriteBatch batch) {
-        players.forEach((id, player) -> player.render(delta, batch));
+    public void render(float delta, SpriteBatch batch, BitmapFont font) {
+        players.forEach((id, player) -> {
+            player.render(delta, batch);
+            player.renderNametag(batch, font);
+        });
     }
 
     @Override

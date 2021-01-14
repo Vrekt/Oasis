@@ -29,14 +29,29 @@ public final class EntityPlayer extends Entity {
     private Lobby lobbyIn;
 
     /**
+     * The character type
+     */
+    protected int character;
+
+    /**
      * Initialize
      *
      * @param entityName name
      * @param entityId   ID
+     * @param character  the character
+     * @param channel    the sending channel
      */
-    public EntityPlayer(String entityName, int entityId, Channel channel) {
+    public EntityPlayer(String entityName, int entityId, int character, Channel channel) {
         super(entityName, entityId);
+        this.character = character;
         this.channel = channel;
+    }
+
+    /**
+     * @return the character type
+     */
+    public int character() {
+        return character;
     }
 
     /**

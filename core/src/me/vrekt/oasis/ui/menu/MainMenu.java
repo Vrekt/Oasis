@@ -1,197 +1,253 @@
 package me.vrekt.oasis.ui.menu;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import me.vrekt.oasis.Oasis;
+import com.badlogic.gdx.scenes.scene2d.utils.Disableable;
+import me.vrekt.oasis.asset.character.CharacterType;
+import me.vrekt.oasis.ui.UserInterface;
 
 /**
- * The game main menu
+ * The main menu UI.
  */
-public final class MainMenu extends ScreenAdapter {
+public final class MainMenu extends UserInterface {
 
     /**
-     * The main stage for this menu
+     * The task to run after selecting a character.
      */
-    private final Stage stage = new Stage();
+    private Runnable afterCharacterSelectionTask;
 
     /**
-     * Root table
+     * The lobby ID to join
      */
-    private final Table mainMenuContainer = new Table();
+    private int lobbyId;
 
     /**
-     * Lobby container
+     * Creates all the new containers required
      */
-    private final Table lobbyContainer = new Table();
-
-    /**
-     * If we are initialized
-     */
-    private boolean initialized;
-
-    @Override
-    public void show() {
-        Gdx.app.log("MainMenu", "Showing game main menu");
-        initialize();
+    public MainMenu() {
+        createContainer("Main");
+        createContainer("Create");
+        createContainer("JoinInput");
+        createContainer("JoinLoad");
+        createContainer("Character");
     }
 
     @Override
-    public void render(float delta) {
-        Gdx.gl.glClearColor(.25f, .25f, .25f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act(delta);
-        stage.draw();
+    protected void initialize() {
+        initializeMainContainer();
+        initializeCreateLobbyContainer();
+        initializeJoinLobbyInputContainer();
+        initializeJoinLobbyLoadContainer();
+        initializeCharacterSelectorContainer();
+
+        isInitialized = true;
     }
 
     /**
-     * Show a dialog
-     *
-     * @param title   the tittle
-     * @param message the message
+     * Initialize the main container.
      */
-    public void showDialog(String title, String message) {
-        final Dialog dialog = new Dialog(title, Oasis.get().assets().defaultUiSkin());
-        dialog.text(message);
-        dialog.button("Ok");
-        dialog.show(stage);
-        stage.setKeyboardFocus(dialog);
-    }
+    private void initializeMainContainer() {
+        final Table root = getContainer("Main");
 
-    /**
-     * Initialize this menu
-     */
-    private void initialize() {
-        stage.clear();
-        mainMenuContainer.setFillParent(true);
-        lobbyContainer.setFillParent(true);
-        stage.addActor(mainMenuContainer);
-        Gdx.input.setInputProcessor(stage);
-
-        if (!initialized) {
-            final Skin defaultSkin = Oasis.get().assets().defaultUiSkin();
-
-            addGameLabel(defaultSkin);
-            addUsernameField(defaultSkin);
-            addCreateLobbyButton(defaultSkin);
-            addJoinLobbyButton(defaultSkin);
-            initializeLobbyContainer(defaultSkin);
-            initialized = true;
-        }
-    }
-
-    /**
-     * Add the game name label
-     *
-     * @param skin skin
-     */
-    private void addGameLabel(Skin skin) {
-        final Label label = new Label("Oasis", skin);
-        mainMenuContainer.add(label).center().row();
-    }
-
-    /**
-     * Add the username field
-     *
-     * @param skin skin
-     */
-    private void addUsernameField(Skin skin) {
+        final Label gameLabel = new Label("Oasis", skin);
         final TextField usernameField = new TextField("", skin);
-        usernameField.setMessageText("Enter username");
-        mainMenuContainer.add(usernameField).center().row();
+        usernameField.setMessageText("Enter username...");
         usernameField.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                Oasis.get().thePlayer().username(usernameField.getText());
+                // set the players username
+                game.thePlayer().username(usernameField.getText());
             }
         });
-    }
 
-    /**
-     * Create a new lobby
-     *
-     * @param skin the skin
-     */
-    private void addCreateLobbyButton(Skin skin) {
-        final TextButton button = new TextButton("Create new lobby", skin);
-        button.addListener(new ClickListener() {
+        final TextButton createNewLobbyButton = new TextButton("Create new lobby", skin);
+        final TextButton joinLobbyButton = new TextButton("Join existing lobby", skin);
+        createNewLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                button.setDisabled(true);
-                if (Oasis.get().network().connectToServer()) {
-                    Oasis.get().network().connection().createLobby(Oasis.get().thePlayer().username());
-                } else {
-                    showDialog("Failed to connect", "Failed to connect to the server");
-                }
-                button.setDisabled(false);
+                afterCharacterSelectionTask = () -> showContainerThen("Create", MainMenu.this::handleCreateLobbyContainer);
+                showContainer("Character");
             }
         });
-        mainMenuContainer.add(button).center().row();
-    }
 
-    /**
-     * Add the join lobby button
-     *
-     * @param skin skin
-     */
-    private void addJoinLobbyButton(Skin skin) {
-        final TextButton button = new TextButton("Join existing lobby", skin);
-        button.addListener(new ClickListener() {
+        joinLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                button.setDisabled(true);
-                if (Oasis.get().network().connectToServer()) {
-                    stage.clear();
-                    stage.addActor(lobbyContainer);
-                } else {
-                    showDialog("Failed to connect", "Failed to connect to the server");
-                }
-                button.setDisabled(false);
+                afterCharacterSelectionTask = () -> showContainer("JoinInput");
+                showContainer("Character");
             }
         });
-        mainMenuContainer.add(button).center().row();
+
+        root.add(gameLabel).fillX().uniformX();
+        root.row();
+        root.add(usernameField).fillX().uniformX();
+        root.row();
+        root.add(createNewLobbyButton).fillX().uniformX();
+        root.row();
+        root.add(joinLobbyButton).fillX().uniformX();
+        stage.addActor(root);
     }
 
     /**
-     * Initialize the lobby container
-     *
-     * @param skin the skin
+     * Initialize the create lobby container
      */
-    private void initializeLobbyContainer(Skin skin) {
-        final TextField field = new TextField("", skin);
-        final TextButton backButton = new TextButton("Back", skin);
+    private void initializeCreateLobbyContainer() {
+        final Table root = getContainer("Create");
+        final Label label = new Label("Creating lobby...", skin);
+        root.add(label).center();
+    }
+
+    /**
+     * Initialize the join lobby container
+     */
+    private void initializeJoinLobbyInputContainer() {
+        final Table root = getContainer("JoinInput");
+        final Label label = new Label("Enter lobby invite code", skin);
+        final TextField lobbyInviteInput = new TextField("", skin);
         final TextButton joinButton = new TextButton("Join", skin);
-        field.setMessageText("Enter lobby invite code");
-
-        lobbyContainer.add(field).center().row();
-        lobbyContainer.add(joinButton).center().row();
-        lobbyContainer.add(backButton).center().row();
-
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                stage.clear();
-                stage.addActor(mainMenuContainer);
-            }
-        });
-
         joinButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 try {
-                    final int lobbyId = Integer.parseInt(field.getText());
-                    Oasis.get().network().connection().joinLobby(Oasis.get().thePlayer().username(), lobbyId);
-                } catch (Exception any) {
-                    showDialog("Error", "You must enter a valid number.");
+                    lobbyId = Integer.parseInt(lobbyInviteInput.getText());
+                    showContainerThen("JoinLoad", MainMenu.this::handleJoinLobbyLoadContainer);
+                } catch (NumberFormatException exception) {
+                    showDialog("Invalid", "Lobby invites can only be numerical");
                 }
             }
         });
+
+        root.add(label).fillX().uniformX().padRight(10f);
+        root.add(lobbyInviteInput).fillX().uniformX();
+        root.row();
+        root.add(joinButton).fillX().uniformX();
+    }
+
+    /**
+     * Initialize the join lobby load container
+     */
+    private void initializeJoinLobbyLoadContainer() {
+        final Table root = getContainer("JoinLoad");
+        final Label label = new Label("Joining lobby...", skin);
+        root.add(label).center();
+    }
+
+    /**
+     * Handle the create lobby container
+     */
+    private void handleCreateLobbyContainer() {
+        final Table root = getContainer("Create");
+        final Label label = (Label) root.getChild(0);
+
+        // connect + create a fake delay here.
+        inFuture(() -> label.setText("Lobby created!"), 1f);
+        inFuture(() -> {
+            // connect to the server
+            if (connect()) {
+                game.network().connection().createLobby(game.thePlayer().username(), game.thePlayer().character().ordinal());
+            } else {
+                showContainer("Main");
+                showDialog("Failed to connect", "Could not connect to the server.");
+            }
+        }, 2.5f);
+    }
+
+    /**
+     * Handle joining the lobby
+     */
+    private void handleJoinLobbyLoadContainer() {
+        // connect
+        inFuture(() -> {
+            // connect to the server
+            if (connect()) {
+                game.network().connection().joinLobby(game.thePlayer().username(), game.thePlayer().character().ordinal(), lobbyId);
+            } else {
+                showContainer("Main");
+                showDialog("Failed to connect", "Could not connect to the server.");
+            }
+        }, 1.5f);
+    }
+
+    /**
+     * Initialize the character selector container
+     */
+    private void initializeCharacterSelectorContainer() {
+        final Table root = getContainer("Character");
+        final Label label = new Label("Select a character.", skin);
+        root.add(label).center().uniformX();
+        root.row();
+
+        for (final CharacterType character : CharacterType.values()) {
+            // retrieve the walking down idle state as a display
+            final TextureRegion region = game.assets().getCharacter(character).get().findRegion("walking_down_idle");
+            // create image
+            final Label characterNameLabel = new Label(character.name(), skin);
+            characterNameLabel.setColor(1f, 1f, 1f, 1f);
+
+            final Image image = new Image(region);
+            image.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    // reset other actors colors
+                    root.getChildren().forEach(actor -> {
+                        if (actor instanceof Label) actor.setColor(1f, 1f, 1f, 1f);
+                    });
+                    // set the text gray to indicate its been selected
+                    characterNameLabel.setColor(.55f, .55f, .55f, 1f);
+                    game.thePlayer().character(character);
+                }
+            });
+
+            root.add(characterNameLabel).uniformX();
+            root.add(image).padTop(20f).uniformX();
+            root.row();
+        }
+
+        final TextButton applyButton = new TextButton("Apply", skin);
+        applyButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                disableAll(root);
+                afterCharacterSelectionTask.run();
+                enableAll(root);
+            }
+        });
+        root.add(applyButton);
+    }
+
+    /**
+     * Disable all elements
+     *
+     * @param container the container
+     */
+    private void disableAll(Table container) {
+        container.getChildren().forEach(actor -> {
+            if (actor instanceof Disableable) ((Disableable) actor).setDisabled(true);
+        });
+    }
+
+    /**
+     * Enable all elements
+     *
+     * @param container the container
+     */
+    private void enableAll(Table container) {
+        container.getChildren().forEach(actor -> {
+            if (actor instanceof Disableable) ((Disableable) actor).setDisabled(false);
+        });
+    }
+
+    /**
+     * Connect
+     *
+     * @return the result
+     */
+    private boolean connect() {
+        return game.network().connectToServer();
     }
 
 }

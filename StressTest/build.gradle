@@ -13,5 +13,6 @@ dependencies {
     compile project(":Protocol")
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
 
+    compile group: 'com.badlogicgames.gdx', name: 'gdx', version: '1.9.13'
 
 }

@@ -1,10 +1,11 @@
 package me.vrekt.oasis.entity.player;
 
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
+import me.vrekt.oasis.Oasis;
+import me.vrekt.oasis.asset.character.CharacterType;
 import me.vrekt.oasis.entity.Entity;
 import me.vrekt.oasis.entity.animated.AnimationController;
 import me.vrekt.oasis.level.world.LevelWorld;
@@ -35,6 +36,16 @@ public abstract class EntityPlayer extends Entity {
     protected LevelWorld worldIn;
 
     /**
+     * The player character type
+     */
+    protected CharacterType characterType;
+
+    /**
+     * The lobby in
+     */
+    protected int lobbyIn;
+
+    /**
      * Initialize
      *
      * @param entityId ID
@@ -60,6 +71,22 @@ public abstract class EntityPlayer extends Entity {
     }
 
     /**
+     * @return the character selected
+     */
+    public CharacterType character() {
+        return characterType;
+    }
+
+    /**
+     * Set the character for this player
+     *
+     * @param characterType the typed
+     */
+    public void character(CharacterType characterType) {
+        this.characterType = characterType;
+    }
+
+    /**
      * @return the world in
      */
     public LevelWorld worldIn() {
@@ -67,12 +94,26 @@ public abstract class EntityPlayer extends Entity {
     }
 
     /**
-     * Create player animations
-     *
-     * @param animations the animations
+     * @return the lobbyIn
      */
-    public void createPlayerAnimations(TextureAtlas animations) {
-        controller = new AnimationController(animations);
+    public int lobbyIn() {
+        return lobbyIn;
+    }
+
+    /**
+     * Set
+     *
+     * @param lobbyIn lobbyIn
+     */
+    public void lobbyIn(int lobbyIn) {
+        this.lobbyIn = lobbyIn;
+    }
+
+    /**
+     * Create player animations
+     */
+    public void createPlayerAnimations() {
+        controller = new AnimationController(Oasis.get().assets().getCharacter(characterType).get());
     }
 
     /**

@@ -21,6 +21,7 @@ import java.io.IOException;
  * TODO Packets at wrong times (loaded when not in lobby, position, etc)
  * TODO Player already created
  * TODO Already in lobbies, etc
+ * TODO Character validation
  */
 public final class PlayerNetworkSession extends ChannelInboundHandlerAdapter implements ClientPacketHandler {
 
@@ -73,13 +74,14 @@ public final class PlayerNetworkSession extends ChannelInboundHandlerAdapter imp
     /**
      * Create a player and spawn them in the lobby
      *
-     * @param username the username
-     * @param lobby    the lobby
+     * @param username  the username
+     * @param character the character
+     * @param lobby     the lobby
      * @return the player
      */
-    private EntityPlayer createPlayerAndSpawnInLobby(String username, Lobby lobby) {
+    private EntityPlayer createPlayerAndSpawnInLobby(String username, int character, Lobby lobby) {
         final int eid = lobby.getNewEntityId();
-        player = new EntityPlayer(username, eid, channel);
+        player = new EntityPlayer(username, eid, character, channel);
         player.setInLobby(lobby);
         player.setLocation(Lobby.SPAWN_X, Lobby.SPAWN_Y);
         lobby.spawnPlayerInLobby(player);
@@ -106,7 +108,7 @@ public final class PlayerNetworkSession extends ChannelInboundHandlerAdapter imp
             Server.getServer().addLobby(lobby);
 
             // spawn them in
-            player = createPlayerAndSpawnInLobby(createLobby.username(), lobby);
+            player = createPlayerAndSpawnInLobby(createLobby.username(), createLobby.character(), lobby);
 
             // have them load the level
             sendNow(new ServerLoadLevel("PreLobby"));
@@ -125,7 +127,7 @@ public final class PlayerNetworkSession extends ChannelInboundHandlerAdapter imp
             final String username = joinLobby.username();
 
             if (lobby.canJoinLobby(username)) {
-                player = createPlayerAndSpawnInLobby(username, lobby);
+                player = createPlayerAndSpawnInLobby(username, joinLobby.character(), lobby);
                 sendNow(new ServerLoadLevel("PreLobby"));
                 sendNow(new ServerJoinLobbyReply(lobby.lobbyId(), player.entityId()));
             } else {
