@@ -13,8 +13,8 @@ Currently there is only a few things implemented
 Currently, by default client tries to connect to "localhost:8090"
   
 # TODO
-  - Lobby input codes, currently default is just 9999 for every client
-  - Sync player movements, you can see others move its just not synced
+  - ~Lobby input codes, currently default is just 9999 for every client~
+  - ~Sync player movements, you can see others move its just not synced~
   - Collision in lobby
   - Remove players collision
   - Add next stage of game
