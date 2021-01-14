@@ -58,3 +58,9 @@ https://opengameart.org/users/gustavo-saraiva
 [OpenGameArt Buch](https://opengameart.org/users/buch)
 
 Heavily modified by me 
+
+
+### Characters
+[OpenGameArt](https://opengameart.org/content/antifareas-rpg-sprite-set-1-enlarged-w-transparent-background-fixed)
+
+**Author: Antifarea**
