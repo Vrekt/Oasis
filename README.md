@@ -17,6 +17,16 @@ Currently, by default client tries to connect to "localhost:8090"
 - [x] Lobby input codes, currently default is just 9999 for every client
 - [x] Sync player movements, you can see others move its just not synced
 - [ ] Collision in lobby
+- [ ] Better name tags
+- [ ] UI Input validation
+- [ ] Server Security
+  - [ ] Packet spamming
+  - [ ] Packets at wrong times
+  - [ ] Character validation
+  - [ ] General security
+- [ ] Better client performance
+- [ ] More characters
+- [ ] Server config
 - [ ] Remove players collision
 - [ ] Add next stage of game
   
