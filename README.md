@@ -2,15 +2,17 @@
 A multiplayer game using libGDX and Netty.
 
 # What is it
-Firstly, the project name is just a placeholder, it will probably change later.
+Still working out what I want the game to be, but some of these elements:
 
-Currently there is only a few things implemented
-  - Handshaking
-  - Creating/Joining lobbies
-  - Player movement and velocity
-  - Disconnecting (sorta)
-  
-Currently, by default client tries to connect to "localhost:8090"
+- Card collecting
+- Ability to bring along plants (boost effects ,etc)
+- Multiplayer with lobbies (done)
+- Contracts/Quests
+- Skills
+- NPCs
+- Note taking/collecting
+
+[![Demo](http://img.youtube.com/vi/rhNCpIIdMwg/0.jpg)](http://www.youtube.com/watch?v=rhNCpIIdMwg "Multiplayer Game Demo")
   
 # TODO
 
