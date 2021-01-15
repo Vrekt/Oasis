@@ -23,6 +23,8 @@ Still working out what I want the game to be, but some of these elements:
 - [ ] Collision in lobby
 - [ ] Better name tags
 - [ ] UI Input validation
+- [ ] Better UI
+- [ ] Better error handling
 - [ ] Server Security
   - [ ] Packet spamming
   - [ ] Packets at wrong times
