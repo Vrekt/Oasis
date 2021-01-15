@@ -20,8 +20,7 @@ Still working out what I want the game to be, but some of these elements:
 
 - [x] Lobby input codes, currently default is just 9999 for every client
 - [x] Sync player movements, you can see others move its just not synced
-- [ ] Collision in lobby
-- [ ] Better name tags
+- [x] Collision in lobby
 - [ ] UI Input validation
 - [ ] Better UI
 - [ ] Better error handling
@@ -32,10 +31,10 @@ Still working out what I want the game to be, but some of these elements:
   - [ ] Packets at wrong times
   - [ ] Character validation
   - [ ] General security
-- [ ] Better client performance
+- [x] Better client performance - maybe done?
 - [ ] More characters
 - [ ] Server config
-- [ ] Remove players collision
+- [x] Remove players collision
 - [ ] Add next stage of game
   
 # Whats planned
