@@ -25,6 +25,8 @@ Still working out what I want the game to be, but some of these elements:
 - [ ] UI Input validation
 - [ ] Better UI
 - [ ] Better error handling
+- [ ] Name tags
+- [ ] Better collision boxes
 - [ ] Server Security
   - [ ] Packet spamming
   - [ ] Packets at wrong times
