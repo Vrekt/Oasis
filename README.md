@@ -2,22 +2,39 @@
 A multiplayer game using libGDX and Netty.
 
 # What is it
-Firstly, the project name is just a placeholder, it will probably change later.
+Still working out what I want the game to be, but some of these elements:
 
-Currently there is only a few things implemented
-  - Handshaking
-  - Creating/Joining lobbies
-  - Player movement and velocity
-  - Disconnecting (sorta)
-  
-Currently, by default client tries to connect to "localhost:8090"
+- Card collecting
+- Ability to bring along plants (boost effects ,etc)
+- Multiplayer with lobbies (done)
+- Contracts/Quests
+- Skills
+- NPCs
+- Note taking/collecting
+
+**Click below to see a current Demo as of 1/14/2021**
+
+[![Demo](http://img.youtube.com/vi/rhNCpIIdMwg/0.jpg)](http://www.youtube.com/watch?v=rhNCpIIdMwg "Multiplayer Game Demo")
   
 # TODO
 
 - [x] Lobby input codes, currently default is just 9999 for every client
 - [x] Sync player movements, you can see others move its just not synced
-- [ ] Collision in lobby
-- [ ] Remove players collision
+- [x] Collision in lobby
+- [ ] UI Input validation
+- [ ] Better UI
+- [ ] Better error handling
+- [ ] Name tags
+- [ ] Better collision boxes
+- [ ] Server Security
+  - [ ] Packet spamming
+  - [ ] Packets at wrong times
+  - [ ] Character validation
+  - [ ] General security
+- [x] Better client performance - maybe done?
+- [ ] More characters
+- [ ] Server config
+- [x] Remove players collision
 - [ ] Add next stage of game
   
 # Whats planned
@@ -44,3 +61,9 @@ https://opengameart.org/users/gustavo-saraiva
 [OpenGameArt Buch](https://opengameart.org/users/buch)
 
 Heavily modified by me 
+
+
+### Characters
+[OpenGameArt](https://opengameart.org/content/antifareas-rpg-sprite-set-1-enlarged-w-transparent-background-fixed)
+
+**Author: Antifarea**
