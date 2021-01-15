@@ -37,6 +37,14 @@ public final class MainMenu extends UserInterface {
     }
 
     @Override
+    public void show() {
+        super.show();
+
+        stage.clear();
+        stage.addActor(getContainer("Main"));
+    }
+
+    @Override
     protected void initialize() {
         initializeMainContainer();
         initializeCreateLobbyContainer();

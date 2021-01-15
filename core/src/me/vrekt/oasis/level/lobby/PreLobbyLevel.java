@@ -4,13 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import me.vrekt.oasis.level.Level;
 import me.vrekt.oasis.level.world.LevelWorld;
 import protocol.packet.client.ClientLevelLoaded;
@@ -21,9 +20,39 @@ import protocol.packet.client.ClientLevelLoaded;
 public final class PreLobbyLevel extends Level {
 
     /**
-     * The drawing location for the lobby code text
+     * The scale of this level.
      */
-    private final Vector3 lobbyIdText = new Vector3(710f, 5f, 0f);
+    private static final float SCALE = 2f;
+
+    /**
+     * Width of screen halved by 2
+     */
+    private static final float WIDTH_HALVED = Gdx.graphics.getWidth() / 2f;
+
+    /**
+     * Height of screen halved by 2
+     */
+    private static final float HEIGHT_HALVED = Gdx.graphics.getHeight() / 2f;
+
+    /**
+     * The max camera X bounds
+     */
+    private static final float CAMERA_X_BOUNDS = 1024 - WIDTH_HALVED;
+
+    /**
+     * The max camera Y bounds
+     */
+    private static final float CAMERA_Y_BOUNDS = 1024 - HEIGHT_HALVED;
+
+    /**
+     * If debug rendering should be done.
+     */
+    private static final boolean DO_DEBUG_RENDERING = false;
+
+    /**
+     * Debug renderer
+     */
+    private Box2DDebugRenderer debugRenderer;
 
     public PreLobbyLevel() {
         super("PreLobby");
@@ -32,6 +61,7 @@ public final class PreLobbyLevel extends Level {
     @Override
     public void show() {
         Gdx.app.log("PreLobby", "Showing pre-lobby");
+        if (debugRenderer == null) debugRenderer = new Box2DDebugRenderer();
     }
 
     @Override
@@ -41,24 +71,19 @@ public final class PreLobbyLevel extends Level {
 
         try {
             tiledMap = new TmxMapLoader().load("levels\\lobby\\Lobby.tmx");
-            renderer = new OrthogonalTiledMapRenderer(tiledMap, 2f);
-
-            // in the future, custom renderer
-            initializeLevelCamera();
+            renderer = new OrthogonalTiledMapRenderer(tiledMap, SCALE);
             batch = new SpriteBatch();
-            font = new BitmapFont(Gdx.files.internal("ui/alagard_by_pix3m-d6awiwp.fnt"));
 
-            world = new LevelWorld();
-            renderer.setView(camera);
+            // create the new world and initialize the camera.
+            world = new LevelWorld(tiledMap, SCALE);
+            initializeLevelCamera(world.spawn());
 
-            thePlayer.spawnInWorld(world, new Vector2(420, 544));
-            thePlayer.createPlayerAnimations();
+            // disable inputs for this level
             thePlayer.disableInputs(Input.Keys.W, Input.Keys.S);
 
             loaded = true;
-            Gdx.app.log("PreLobbyLevel", "PreLobby loaded successfully, took " + (System.currentTimeMillis() - now) + " ms");
-
             game.connection().send(new ClientLevelLoaded());
+            Gdx.app.log("PreLobbyLevel", "PreLobby loaded successfully, took " + (System.currentTimeMillis() - now) + " ms");
         } catch (Exception any) {
             Gdx.app.log("PreLobbyLevel", "Failed to load!", any);
             return false;
@@ -69,14 +94,15 @@ public final class PreLobbyLevel extends Level {
     @Override
     public void unload() {
         thePlayer.enableInputs(Input.Keys.W, Input.Keys.S);
+        loaded = false;
     }
 
     /**
      * Initialize the camera for this level
      */
-    private void initializeLevelCamera() {
+    private void initializeLevelCamera(Vector2 location) {
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.position.set(420, 720, 0);
+        camera.position.set(location.x, location.y, 0);
         camera.update();
     }
 
@@ -85,10 +111,8 @@ public final class PreLobbyLevel extends Level {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (loaded) {
-            renderInternal(delta);
-            updateInternal(delta);
-        }
+        update(delta);
+        draw(delta);
     }
 
     /**
@@ -96,13 +120,12 @@ public final class PreLobbyLevel extends Level {
      *
      * @param delta delta
      */
-    private void updateInternal(float delta) {
+    private void update(float delta) {
         world.update(delta);
-        thePlayer.update(delta);
 
         // clamp camera position so it does not go out of bounds.
-        camera.position.x = MathUtils.clamp(thePlayer.x(), Gdx.graphics.getWidth() / 2f, 1024 - (camera.viewportWidth / 2));
-        camera.position.y = MathUtils.clamp(thePlayer.y(), Gdx.graphics.getHeight() / 2f, 1024 - (camera.viewportHeight / 2));
+        camera.position.x = MathUtils.clamp(thePlayer.x(), WIDTH_HALVED, CAMERA_X_BOUNDS);
+        camera.position.y = MathUtils.clamp(thePlayer.y(), HEIGHT_HALVED, CAMERA_Y_BOUNDS);
         camera.update();
     }
 
@@ -111,19 +134,23 @@ public final class PreLobbyLevel extends Level {
      *
      * @param delta delta
      */
-    private void renderInternal(float delta) {
+    private void draw(float delta) {
         renderer.setView(camera);
         renderer.render();
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        world.render(delta, batch, font);
-        thePlayer.render(delta, batch);
-
-        final Vector3 location = camera.unproject(new Vector3(710, 5f, 0));
-        font.draw(batch, "Lobby: " + thePlayer.lobbyIn(), location.x, location.y);
+        world.render(delta, batch);
         batch.end();
+
+        if (DO_DEBUG_RENDERING) debugRenderer.render(world.box2dWorld(), camera.combined);
+    }
+
+    @Override
+    public void dispose() {
+        if (debugRenderer != null) debugRenderer.dispose();
+        super.dispose();
     }
 
 }

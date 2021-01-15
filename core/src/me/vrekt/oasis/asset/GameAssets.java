@@ -3,6 +3,7 @@ package me.vrekt.oasis.asset;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Disposable;
@@ -38,6 +39,11 @@ public final class GameAssets implements Disposable {
     private final Skin defaultUiSkin;
 
     /**
+     * The default font
+     */
+    private final BitmapFont font;
+
+    /**
      * Loads the assets needed
      */
     public GameAssets() {
@@ -50,6 +56,9 @@ public final class GameAssets implements Disposable {
 
         characters.put(CharacterType.ATHENA, () -> manager.get("characters/healer_female/HealerFemale.atlas"));
         characters.put(CharacterType.CRIMSON, () -> manager.get("characters/healer_male/HealerMale.atlas"));
+
+        font = new BitmapFont(Gdx.files.internal("ui/UserInterfaceFont.fnt"), Gdx.files.internal("ui/UserInterfaceFont.png"), false);
+
         manager.finishLoading();
     }
 
@@ -78,6 +87,13 @@ public final class GameAssets implements Disposable {
      */
     public Skin defaultUiSkin() {
         return defaultUiSkin;
+    }
+
+    /**
+     * @return the font
+     */
+    public BitmapFont font() {
+        return font;
     }
 
     /**

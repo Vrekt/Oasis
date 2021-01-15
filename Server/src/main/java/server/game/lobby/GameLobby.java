@@ -3,10 +3,7 @@ package server.game.lobby;
 import com.google.common.flogger.FluentLogger;
 import io.netty.buffer.ByteBuf;
 import protocol.packet.Packet;
-import protocol.packet.server.ServerCreatePlayer;
-import protocol.packet.server.ServerPlayerPosition;
-import protocol.packet.server.ServerPlayerVelocity;
-import protocol.packet.server.ServerRemovePlayer;
+import protocol.packet.server.*;
 import server.game.Server;
 import server.game.entity.packet.QueuedPlayerPacketUpdate;
 import server.game.entity.player.EntityPlayer;
@@ -74,7 +71,7 @@ final class GameLobby implements Lobby {
     @Override
     public void spawnPlayerInLobby(EntityPlayer player) {
         if (!players.isEmpty()) {
-            final ByteBuf packet = Packet.encodeDirect(new ServerCreatePlayer(player.entityName(), player.character(), player.entityId(), player.x(), player.y()));
+            final ByteBuf packet = Packet.encodeDirect(new ServerSpawnPlayer(player.entityName(), player.character(), player.entityId()));
             broadcast(packet);
         }
 

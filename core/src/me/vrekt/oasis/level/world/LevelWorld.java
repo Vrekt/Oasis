@@ -1,10 +1,19 @@
 package me.vrekt.oasis.level.world;
 
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
+import me.vrekt.oasis.Oasis;
+import me.vrekt.oasis.collision.CollisionHandler;
+import me.vrekt.oasis.collision.CollisionObject;
+import me.vrekt.oasis.collision.CollisionType;
+import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
 import me.vrekt.oasis.entity.player.network.NetworkEntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
 
@@ -12,19 +21,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Contains information about the level
+ * Handles the world within the level
  */
 public final class LevelWorld implements Disposable {
 
     /**
      * Default world step
      */
-    private static final float DEFAULT_STEP = 1 / 60f;
+    private static final float DEFAULT_STEP = 1.0f / 60.0f;
 
     /**
-     * The world
+     * The max frame time allowed
      */
-    private final World world;
+    private static final float MAX_FRAME_TIME = 0.25f;
 
     /**
      * List of players for this world
@@ -32,12 +41,38 @@ public final class LevelWorld implements Disposable {
     private final Map<Integer, NetworkEntityPlayer> players = new ConcurrentHashMap<>();
 
     /**
+     * The local player
+     */
+    private final LocalEntityPlayer thePlayer;
+
+    /**
+     * The world
+     */
+    private final World world;
+
+    /**
+     * The spawn location for players
+     */
+    private final Vector2 spawn;
+
+    /**
      * Accumulator
      */
     private float worldStepAccumulator;
 
-    public LevelWorld() {
+    /**
+     * Creates a new world for a level
+     *
+     * @param map the map of the level
+     */
+    public LevelWorld(TiledMap map, float mapScale) {
         world = new World(new Vector2(0, 0), true);
+        world.setContactListener(new CollisionHandler());
+        thePlayer = Oasis.get().thePlayer();
+
+        spawn = retrieveSpawnArea(map, mapScale);
+        initializeLocalPlayerIn();
+        initializeCollision(map);
     }
 
     /**
@@ -48,16 +83,40 @@ public final class LevelWorld implements Disposable {
     }
 
     /**
+     * @return the spawn area
+     */
+    public Vector2 spawn() {
+        return spawn;
+    }
+
+    /**
+     * Initialize the local player
+     */
+    private void initializeLocalPlayerIn() {
+        thePlayer.createPlayerAnimations();
+        thePlayer.spawnEntityInWorld(this, spawn.x, spawn.y);
+    }
+
+    /**
      * Spawn a player in this world
      *
      * @param player the player
-     * @param x      spawn X
-     * @param y      spawn Y
      */
-    public void spawnPlayer(NetworkEntityPlayer player, float x, float y) {
+    public void spawnPlayer(NetworkEntityPlayer player) {
+        createPlayer(player, spawn.x, spawn.y);
+    }
+
+    /**
+     * Create a player in the world
+     *
+     * @param player the player
+     * @param x      their current X location
+     * @param y      their current Y location
+     */
+    public void createPlayer(NetworkEntityPlayer player, float x, float y) {
         players.put(player.entityId(), player);
         player.createPlayerAnimations();
-        player.spawnInWorld(this, new Vector2(x, y));
+        player.spawnEntityInWorld(this, x, y);
     }
 
     /**
@@ -67,7 +126,7 @@ public final class LevelWorld implements Disposable {
      */
     public void removePlayer(int entityId) {
         final NetworkEntityPlayer player = players.remove(entityId);
-        if (player != null) world.destroyBody(player.entityBody());
+        if (player != null) world.destroyBody(player.body());
     }
 
     /**
@@ -101,18 +160,71 @@ public final class LevelWorld implements Disposable {
     }
 
     /**
+     * Initialize collision for this world
+     *
+     * @param map the map
+     */
+    private void initializeCollision(TiledMap map) {
+        map.getLayers()
+                .get("Collision")
+                .getObjects()
+                .getByType(RectangleMapObject.class)
+                .forEach(rect -> {
+                    // create a static body for this object
+                    final BodyDef bodyDef = new BodyDef();
+                    bodyDef.type = BodyDef.BodyType.StaticBody;
+                    // scale by *2 for the scaled world size
+                    bodyDef.position.set(new Vector2(rect.getRectangle().x * 2, rect.getRectangle().y * 2));
+                    bodyDef.fixedRotation = true;
+
+                    // create a basic poly, that *roughly* matches the shape
+                    // TODO: The shapes from tiled don't match up :/
+                    final Body body = world.createBody(bodyDef);
+                    final PolygonShape shape = new PolygonShape();
+                    shape.setAsBox(rect.getRectangle().width, rect.getRectangle().height);
+
+                    // finally, create the fixture and set the type as a collision object
+                    body.createFixture(shape, 1.0f).setUserData(new CollisionObject(CollisionType.INVISIBLE_WALL));
+                    shape.dispose();
+                });
+    }
+
+    /**
+     * Retrieve the spawn area
+     *
+     * @param map      the map
+     * @param mapScale the scale of the map
+     * @return the spawn vector
+     */
+    private Vector2 retrieveSpawnArea(TiledMap map, float mapScale) {
+        // retrieve the spawn trigger for the map
+        final RectangleMapObject spawnTrigger = (RectangleMapObject) map.getLayers()
+                .get("Triggers")
+                .getObjects()
+                .get("Spawn");
+        return new Vector2(spawnTrigger.getRectangle().x * mapScale, spawnTrigger.getRectangle().y * mapScale);
+    }
+
+    /**
      * Update the world
      *
      * @param delta the delta
      */
     public void update(float delta) {
-        worldStepAccumulator += delta;
+        final float capped = Math.min(delta, MAX_FRAME_TIME);
+        worldStepAccumulator += capped;
+
         while (worldStepAccumulator >= DEFAULT_STEP) {
+            // update local player
+            thePlayer.update(delta);
+
+            // update networked players
+            players.forEach((id, player) -> player.update(delta));
+
+            // step simulation
             world.step(DEFAULT_STEP, 6, 3);
             worldStepAccumulator -= DEFAULT_STEP;
         }
-
-        players.forEach((id, player) -> player.update(delta));
     }
 
     /**
@@ -121,11 +233,9 @@ public final class LevelWorld implements Disposable {
      * @param delta the delta
      * @param batch the batch
      */
-    public void render(float delta, SpriteBatch batch, BitmapFont font) {
-        players.forEach((id, player) -> {
-            player.render(delta, batch);
-            player.renderNametag(batch, font);
-        });
+    public void render(float delta, SpriteBatch batch) {
+        thePlayer.render(delta, batch);
+        players.forEach((id, player) -> player.render(delta, batch));
     }
 
     @Override

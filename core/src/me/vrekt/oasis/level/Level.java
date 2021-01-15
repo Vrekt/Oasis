@@ -2,7 +2,6 @@ package me.vrekt.oasis.level;
 
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
@@ -45,11 +44,6 @@ public abstract class Level extends ScreenAdapter implements Disposable {
      * The batch
      */
     protected SpriteBatch batch;
-
-    /**
-     * The font
-     */
-    protected BitmapFont font;
 
     /**
      * The world for this level
@@ -116,7 +110,6 @@ public abstract class Level extends ScreenAdapter implements Disposable {
         if (renderer != null) renderer.dispose();
         if (tiledMap != null) tiledMap.dispose();
         if (batch != null) batch.dispose();
-        if(font != null) font.dispose();
         camera = null;
         loaded = false;
         world = null;

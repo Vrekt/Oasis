@@ -9,11 +9,6 @@ import server.game.utilities.Disposable;
 public interface Lobby extends Disposable {
 
     /**
-     * Spawning positions of every lobby
-     */
-    float SPAWN_X = 420, SPAWN_Y = 544;
-
-    /**
      * Create a new lobby
      *
      * @param lobbyId the ID

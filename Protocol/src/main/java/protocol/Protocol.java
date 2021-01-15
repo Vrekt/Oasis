@@ -52,6 +52,7 @@ public final class Protocol {
         SERVER_PACKETS.put(ServerLoadLevel.PID, ServerLoadLevel::new);
         SERVER_PACKETS.put(ServerPlayerVelocity.PID, ServerPlayerVelocity::new);
         SERVER_PACKETS.put(ServerPlayerPosition.PID, ServerPlayerPosition::new);
+        SERVER_PACKETS.put(ServerSpawnPlayer.PID, ServerSpawnPlayer::new);
     }
 
     /**

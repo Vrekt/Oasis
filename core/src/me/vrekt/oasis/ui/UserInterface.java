@@ -159,4 +159,9 @@ public abstract class UserInterface extends ScreenAdapter {
      */
     protected abstract void initialize();
 
+    @Override
+    public void dispose() {
+        stage.dispose();
+        containers.clear();
+    }
 }

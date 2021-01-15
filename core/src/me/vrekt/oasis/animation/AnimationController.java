@@ -1,4 +1,4 @@
-package me.vrekt.oasis.entity.animated;
+package me.vrekt.oasis.animation;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;

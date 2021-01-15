@@ -25,17 +25,19 @@ public abstract class Entity implements Disposable {
     /**
      * The Box2d body for this entity.
      */
-    protected Body entityBody;
+    protected Body body;
 
     /**
-     * The velocity of this entity
+     * Previous location
+     * Current location
+     * Current velocity
      */
-    protected final Vector2 velocity = new Vector2(0, 0);
+    protected Vector2 previous = new Vector2(), current = new Vector2(), velocity = new Vector2();
 
     /**
      * Initialize this entity
      *
-     * @param entityId   the ID
+     * @param entityId the ID
      */
     public Entity(int entityId) {
         this.entityId = entityId;
@@ -60,16 +62,10 @@ public abstract class Entity implements Disposable {
      * Spawn this entity in the world
      *
      * @param world the world
-     * @param at    at
+     * @param x     X
+     * @param y     Y
      */
-    public abstract void spawnInWorld(LevelWorld world, Vector2 at);
-
-    /**
-     * Reset velocity
-     */
-    protected void resetVelocity() {
-        velocity.set(0, 0);
-    }
+    public abstract void spawnEntityInWorld(LevelWorld world, float x, float y);
 
     /**
      * @return the entity ID
@@ -91,36 +87,20 @@ public abstract class Entity implements Disposable {
      * @return X position
      */
     public float x() {
-        return entityBody.getPosition().x;
+        return current.x;
     }
 
     /**
      * @return Y position
      */
     public float y() {
-        return entityBody.getPosition().y;
+        return current.y;
     }
 
     /**
      * @return the body
      */
-    public Body entityBody() {
-        return entityBody;
-    }
-
-    /**
-     * @return the entity rotation
-     */
-    public Rotation rotation() {
-        return rotation;
-    }
-
-    /**
-     * Set the rotation
-     *
-     * @param rotation the rotation
-     */
-    public void rotation(Rotation rotation) {
-        this.rotation = rotation;
+    public Body body() {
+        return body;
     }
 }

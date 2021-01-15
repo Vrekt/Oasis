@@ -2,12 +2,14 @@ package me.vrekt.oasis.entity.player;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import me.vrekt.oasis.Oasis;
+import me.vrekt.oasis.animation.AnimationController;
 import me.vrekt.oasis.asset.character.CharacterType;
+import me.vrekt.oasis.collision.CollisionObject;
 import me.vrekt.oasis.entity.Entity;
-import me.vrekt.oasis.entity.animated.AnimationController;
 import me.vrekt.oasis.level.world.LevelWorld;
 
 /**
@@ -26,11 +28,6 @@ public abstract class EntityPlayer extends Entity {
     protected AnimationController controller;
 
     /**
-     * Used for interpolation
-     */
-    protected Vector2 previous, current;
-
-    /**
      * The world this player is in
      */
     protected LevelWorld worldIn;
@@ -44,6 +41,11 @@ public abstract class EntityPlayer extends Entity {
      * The lobby in
      */
     protected int lobbyIn;
+
+    /**
+     * If this player is colliding.
+     */
+    protected boolean colliding;
 
     /**
      * Initialize
@@ -110,6 +112,22 @@ public abstract class EntityPlayer extends Entity {
     }
 
     /**
+     * @return {@code true if the player is colliding}
+     */
+    public boolean colliding() {
+        return colliding;
+    }
+
+    /**
+     * Set colliding
+     *
+     * @param colliding colliding
+     */
+    public void colliding(boolean colliding) {
+        this.colliding = colliding;
+    }
+
+    /**
      * Create player animations
      */
     public void createPlayerAnimations() {
@@ -117,36 +135,56 @@ public abstract class EntityPlayer extends Entity {
     }
 
     /**
-     * Spawn the player in the world
+     * Start collision
      *
-     * @param world the world
-     * @param at    at
+     * @param with with
      */
+    public void startCollision(Fixture with) {
+        final CollisionObject object = (CollisionObject) with.getUserData();
+        switch (object.collisionType()) {
+            case INVISIBLE_WALL:
+                this.colliding = true;
+                break;
+            case PLAYER:
+                this.colliding = false;
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * End collision
+     */
+    public void endCollision() {
+        this.colliding = false;
+    }
+
     @Override
-    public void spawnInWorld(LevelWorld world, Vector2 at) {
+    public void spawnEntityInWorld(LevelWorld world, float x, float y) {
         worldIn = world;
 
+        // default body def for all player types (network + local)
         final BodyDef definition = new BodyDef();
         definition.type = BodyDef.BodyType.DynamicBody;
         definition.fixedRotation = true;
-        definition.position.set(at);
+        definition.position.set(x, y);
 
-        entityBody = world.box2dWorld().createBody(definition);
+        body = world.box2dWorld().createBody(definition);
+
+        // TODO: Need to fix this shape, idk how.
         final PolygonShape shape = new PolygonShape();
-        shape.setAsBox(16, 16);
+        shape.setAsBox(24, 32, new Vector2(12, 12), 0f);
 
         final FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.filter.groupIndex = 0x1;
-        fixtureDef.filter.maskBits = 0x1;
-        fixtureDef.filter.categoryBits = 0x1;
         fixtureDef.density = 1.0f;
         fixtureDef.shape = shape;
 
-        entityBody.createFixture(fixtureDef);
+        body.createFixture(fixtureDef).setUserData(this);
         shape.dispose();
 
-        previous = at;
-        current = at;
+        previous.set(x, y);
+        current.set(x, y);
     }
 
     @Override

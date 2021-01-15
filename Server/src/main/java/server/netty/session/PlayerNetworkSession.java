@@ -83,7 +83,6 @@ public final class PlayerNetworkSession extends ChannelInboundHandlerAdapter imp
         final int eid = lobby.getNewEntityId();
         player = new EntityPlayer(username, eid, character, channel);
         player.setInLobby(lobby);
-        player.setLocation(Lobby.SPAWN_X, Lobby.SPAWN_Y);
         lobby.spawnPlayerInLobby(player);
         return player;
     }

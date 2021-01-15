@@ -30,6 +30,13 @@ public interface ServerPacketHandler extends PacketHandler {
     void handleCreatePlayer(ServerCreatePlayer createPlayer);
 
     /**
+     * Handle spawning a player
+     *
+     * @param spawnPlayer the player
+     */
+    void handleSpawnPlayer(ServerSpawnPlayer spawnPlayer);
+
+    /**
      * Handle removing a player
      *
      * @param removePlayer the player

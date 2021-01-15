@@ -1,11 +1,8 @@
 package me.vrekt.oasis.entity.player.network;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
-import me.vrekt.oasis.Oasis;
 import me.vrekt.oasis.asset.character.CharacterType;
 import me.vrekt.oasis.entity.player.EntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
@@ -31,12 +28,6 @@ public final class NetworkEntityPlayer extends EntityPlayer {
     private float interpolateToX, interpolateToY;
 
     /**
-     * Name tag texture
-     * TODO: Not desirable to have here
-     */
-    private final Texture nameTagTexture;
-
-    /**
      * Initialize
      *
      * @param username  their username
@@ -47,8 +38,6 @@ public final class NetworkEntityPlayer extends EntityPlayer {
         super(entityId);
         this.characterType = CharacterType.values()[character];
         this.username = username;
-
-        nameTagTexture = Oasis.get().assets().getTexture("player/nametag.png");
     }
 
     /**
@@ -87,7 +76,7 @@ public final class NetworkEntityPlayer extends EntityPlayer {
     public void update(float delta) {
         // update locations for interpolation
         previous = current;
-        current = entityBody.getPosition().cpy();
+        current = body.getPosition().cpy();
 
         if (doPositionInterpolation) {
             final Vector2 to = new Vector2(interpolateToX, interpolateToY);
@@ -102,24 +91,12 @@ public final class NetworkEntityPlayer extends EntityPlayer {
 
         // update
         controller.update(rotation, (velocityX != 0.0f || velocityY != 0.0f), false);
-        entityBody.setLinearVelocity(interpolatedVelocityX, interpolatedVelocityY);
+        body.setLinearVelocity(interpolatedVelocityX, interpolatedVelocityY);
     }
 
     @Override
     public void render(float delta, SpriteBatch batch) {
         controller.render(delta, rotation, current, batch);
-    }
-
-    /**
-     * Render a nametag above this player
-     * TODO
-     *
-     * @param batch the batch
-     * @param font  the font
-     */
-    public void renderNametag(SpriteBatch batch, BitmapFont font) {
-        batch.draw(nameTagTexture, entityBody.getPosition().x - 16, entityBody.getPosition().y + 40);
-        font.draw(batch, username, entityBody.getPosition().x - 12, entityBody.getPosition().y + 50);
     }
 
 }

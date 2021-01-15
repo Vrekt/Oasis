@@ -119,7 +119,13 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     @Override
     public void handleCreatePlayer(ServerCreatePlayer createPlayer) {
         Gdx.app.log(TAG, "Creating a new network player username=" + createPlayer.username() + ", eid=" + createPlayer.entityId());
-        thePlayer.worldIn().spawnPlayer(new NetworkEntityPlayer(createPlayer.username(), createPlayer.character(), createPlayer.entityId()), createPlayer.x(), createPlayer.y());
+        thePlayer.worldIn().createPlayer(new NetworkEntityPlayer(createPlayer.username(), createPlayer.character(), createPlayer.entityId()), createPlayer.x(), createPlayer.y());
+    }
+
+    @Override
+    public void handleSpawnPlayer(ServerSpawnPlayer spawnPlayer) {
+        Gdx.app.log(TAG, "Spawning a network player, username=" + spawnPlayer.username() + ", eid=" + spawnPlayer.entityId());
+        thePlayer.worldIn().spawnPlayer(new NetworkEntityPlayer(spawnPlayer.username(), spawnPlayer.character(), spawnPlayer.entityId()));
     }
 
     @Override
