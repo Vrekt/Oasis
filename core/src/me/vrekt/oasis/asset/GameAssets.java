@@ -111,5 +111,7 @@ public final class GameAssets implements Disposable {
         manager.dispose();
         defaultUiSkinAtlas.dispose();
         defaultUiSkin.dispose();
+        characters.clear();
+        font.dispose();
     }
 }

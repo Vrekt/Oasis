@@ -1,13 +1,10 @@
 package me.vrekt.oasis.level;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
-import me.vrekt.oasis.OasisGameAdapter;
 import me.vrekt.oasis.level.lobby.PreLobbyLevel;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Manages levels
@@ -39,28 +36,6 @@ public final class LevelManager implements Disposable {
      */
     public Level getLevel(String level) {
         return levels.get(level);
-    }
-
-    /**
-     * Start a new level
-     *
-     * @param level the level
-     */
-    public CompletableFuture<Boolean> startLevel(Level level) {
-        this.level = level;
-        final CompletableFuture<Boolean> result = new CompletableFuture<>();
-
-        Gdx.app.postRunnable(() -> result.complete(level.load()));
-        return result;
-    }
-
-    /**
-     * Show a level
-     *
-     * @param level the level
-     */
-    public void showLevel(Level level) {
-        Gdx.app.postRunnable(() -> OasisGameAdapter.get().setScreen(level));
     }
 
     /**

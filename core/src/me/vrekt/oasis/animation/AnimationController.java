@@ -74,14 +74,6 @@ public final class AnimationController implements Disposable {
     }
 
     /**
-     * Reset
-     */
-    public void reset() {
-        animationTime = 0f;
-        currentAnimation = animationsByRotation.get(Rotation.FACING_RIGHT);
-    }
-
-    /**
      * Update this controller
      *
      * @param rotation     the current rotation

@@ -1,29 +1,23 @@
 package me.vrekt.oasis.level;
 
-import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.Disposable;
-import me.vrekt.oasis.Oasis;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
 import me.vrekt.oasis.level.world.LevelWorld;
+import me.vrekt.oasis.ui.types.InGameUserInterface;
 
 /**
  * Represents a level.
  */
-public abstract class Level extends ScreenAdapter implements Disposable {
+public abstract class Level extends InGameUserInterface implements Disposable {
 
     /**
      * The name of the level
      */
     protected final String levelName;
-
-    /**
-     * The game instance
-     */
-    protected final Oasis game;
 
     /**
      * The camera for this level.
@@ -67,7 +61,6 @@ public abstract class Level extends ScreenAdapter implements Disposable {
      */
     public Level(String levelName) {
         this.levelName = levelName;
-        game = Oasis.get();
         thePlayer = game.thePlayer();
     }
 

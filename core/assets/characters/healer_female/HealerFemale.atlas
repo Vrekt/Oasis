@@ -4,86 +4,93 @@ size: 64,256
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
+display
+  rotate: false
+  xy: 2, 182
+  size: 28, 34
+  orig: 28, 34
+  offset: 0, 0
+  index: -1
+walking_down_idle
+  rotate: false
+  xy: 2, 182
+  size: 28, 34
+  orig: 28, 34
+  offset: 0, 0
+  index: -1
 walking_down
   rotate: false
-  xy: 29, 204
+  xy: 2, 146
   size: 28, 34
   orig: 28, 34
   offset: 0, 0
   index: 2
 walking_down
   rotate: false
-  xy: 0, 136
+  xy: 32, 182
   size: 28, 34
   orig: 28, 34
   offset: 0, 0
   index: 1
-walking_down_idle
-  rotate: false
-  xy: 28, 170
-  size: 28, 34
-  orig: 28, 34
-  offset: 0, 0
-  index: -1
 walking_left
   rotate: false
-  xy: 28, 136
+  xy: 32, 146
   size: 24, 34
   orig: 24, 34
   offset: 0, 0
   index: 2
 walking_left
   rotate: false
-  xy: 0, 34
+  xy: 2, 38
   size: 24, 34
   orig: 24, 34
   offset: 0, 0
   index: 1
 walking_left_idle
   rotate: false
-  xy: 0, 0
+  xy: 2, 2
   size: 24, 34
   orig: 24, 34
   offset: 0, 0
   index: -1
 walking_right
   rotate: false
-  xy: 0, 68
+  xy: 2, 74
   size: 24, 34
   orig: 24, 34
   offset: 0, 0
   index: 2
 walking_right
   rotate: false
-  xy: 24, 68
+  xy: 28, 74
   size: 24, 34
   orig: 24, 34
   offset: 0, 0
   index: 1
 walking_right_idle
   rotate: false
-  xy: 28, 102
+  xy: 32, 110
   size: 24, 34
   orig: 24, 34
   offset: 0, 0
   index: -1
 walking_up
   rotate: false
-  xy: 0, 204
+  xy: 2, 218
   size: 29, 34
   orig: 29, 34
   offset: 0, 0
   index: 1
 walking_up
   rotate: false
-  xy: 0, 102
+  xy: 2, 110
   size: 28, 34
   orig: 28, 34
   offset: 0, 0
   index: 2
 walking_up_idle
   rotate: false
-  xy: 0, 170
+  xy: 33, 218
   size: 28, 34
   orig: 28, 34
   offset: 0, 0

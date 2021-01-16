@@ -110,8 +110,8 @@ public final class PlayerNetworkSession extends ChannelInboundHandlerAdapter imp
             player = createPlayerAndSpawnInLobby(createLobby.username(), createLobby.character(), lobby);
 
             // have them load the level
-            sendNow(new ServerLoadLevel("PreLobby"));
             sendNow(new ServerCreateLobbyReply(newLobbyId, player.entityId()));
+            sendNow(new ServerLoadLevel("PreLobby"));
         } else {
             sendNow(new ServerCreateLobbyReply(false, "Server is full."));
         }
@@ -127,8 +127,8 @@ public final class PlayerNetworkSession extends ChannelInboundHandlerAdapter imp
 
             if (lobby.canJoinLobby(username)) {
                 player = createPlayerAndSpawnInLobby(username, joinLobby.character(), lobby);
-                sendNow(new ServerLoadLevel("PreLobby"));
                 sendNow(new ServerJoinLobbyReply(lobby.lobbyId(), player.entityId()));
+                sendNow(new ServerLoadLevel("PreLobby"));
             } else {
                 sendNow(new ServerJoinLobbyReply(false, "Username already taken."));
             }

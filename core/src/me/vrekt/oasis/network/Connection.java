@@ -10,6 +10,8 @@ import me.vrekt.oasis.Oasis;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
 import me.vrekt.oasis.entity.player.network.NetworkEntityPlayer;
 import me.vrekt.oasis.level.Level;
+import me.vrekt.oasis.level.load.LevelLoadingScreen;
+import me.vrekt.oasis.network.states.ConnectionState;
 import protocol.Protocol;
 import protocol.packet.Packet;
 import protocol.packet.client.ClientCreateLobby;
@@ -18,6 +20,8 @@ import protocol.packet.client.ClientHandshake;
 import protocol.packet.client.ClientJoinLobby;
 import protocol.packet.handlers.ServerPacketHandler;
 import protocol.packet.server.*;
+
+import java.util.function.Consumer;
 
 /**
  * Represents the player connection
@@ -45,12 +49,19 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     private final Channel channel;
 
     /**
+     * Connection state consumer
+     */
+    private final Consumer<ConnectionState> connectionStateConsumer;
+
+    /**
      * Initialize this connection
      *
      * @param channel the channel
      */
-    public Connection(Channel channel) {
+    public Connection(Channel channel, Consumer<ConnectionState> connectionStateConsumer) {
         this.channel = channel;
+        this.connectionStateConsumer = connectionStateConsumer;
+
         game = Oasis.get();
         thePlayer = game.thePlayer();
         thePlayer.connection(this);
@@ -60,31 +71,27 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
      * Handshake with the server
      */
     public void handshake() {
+        connectionStateConsumer.accept(ConnectionState.HANDSHAKING);
+
         Gdx.app.log(TAG, "Handshaking with remote server, game=" + Oasis.GAME_VERSION + " protocol=" + Protocol.PROTOCOL_VERSION);
         channel.writeAndFlush(new ClientHandshake(Oasis.GAME_VERSION, Protocol.PROTOCOL_VERSION));
     }
 
+
     /**
      * Create a lobby
-     *
-     * @param username  the username
-     * @param character the character type
      */
-    public void createLobby(String username, int character) {
-        Gdx.app.log(TAG, "Attempting to create a new lobby; username=" + username + "; with character=" + character);
-        channel.writeAndFlush(new ClientCreateLobby(username, character));
+    public void createLobby() {
+        Gdx.app.log(TAG, "Attempting to create a new lobby");
+        channel.writeAndFlush(new ClientCreateLobby(game.thePlayer().username(), game.thePlayer().character().ordinal()));
     }
 
     /**
      * Join a lobby
-     *
-     * @param username  their username
-     * @param character the character ID
-     * @param lobbyId   the lobby ID
      */
-    public void joinLobby(String username, int character, int lobbyId) {
-        Gdx.app.log(TAG, "Attempting to join lobby " + lobbyId);
-        channel.writeAndFlush(new ClientJoinLobby(username, character, lobbyId));
+    public void joinLobby() {
+        Gdx.app.log(TAG, "Attempting to join lobby " + game.thePlayer().lobbyIn());
+        channel.writeAndFlush(new ClientJoinLobby(game.thePlayer().username(), game.thePlayer().character().ordinal(), game.thePlayer().lobbyIn()));
     }
 
     /**
@@ -99,6 +106,7 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     @Override
     public void handleHandshakeReply(ServerHandshakeReply reply) {
         if (reply.allowed()) {
+            connectionStateConsumer.accept(ConnectionState.AUTHENTICATED);
             Gdx.app.log(TAG, "Connected to server successfully.");
         } else {
             game.showMainMenuWithError("Could not connect", "Could not connect to the server! Reason:\n" + reply.notAllowedReason());
@@ -137,7 +145,7 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     @Override
     public void handleJoinLobbyReply(ServerJoinLobbyReply reply) {
         if (reply.allowed()) {
-            Gdx.app.log(TAG, "Initializing local player with ID: " + reply.entityId());
+            Gdx.app.log(TAG, "Initializing local player with ID: " + reply.entityId() + " in lobby " + reply.lobbyId());
             thePlayer.entityId(reply.entityId());
             thePlayer.lobbyIn(reply.lobbyId());
         } else {
@@ -148,17 +156,11 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     @Override
     public void handleLoadLevel(ServerLoadLevel loadLevel) {
         final Level level = game.level().getLevel(loadLevel.levelName());
-
-        try {
-            final boolean result = game.level().startLevel(level).get();
-            if (!result) {
-                game.showMainMenuWithError("Could not load", "Failed to load the game!");
-            } else {
-                game.level().showLevel(level);
-            }
-        } catch (Exception any) {
-            game.showMainMenuWithError("Could not load", "Failed to load the game! Cause:\n" + any.getMessage());
-        }
+        // will automatically load the level and display it.
+        Gdx.app.postRunnable(() -> {
+            final LevelLoadingScreen screen = new LevelLoadingScreen(level);
+            game.showSync(screen);
+        });
     }
 
     @Override
@@ -175,6 +177,7 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     public void handleDisconnect(ServerDisconnect disconnect) {
         Gdx.app.log(TAG, "Disconnected from the server: " + disconnect.reason());
         game.showMainMenuWithError("Disconnected", "You were disconnected from the server:\n" + disconnect.reason());
+        game.network().setConnected(false);
         dispose();
     }
 
@@ -187,6 +190,7 @@ public final class Connection extends ChannelInboundHandlerAdapter implements Se
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         Gdx.app.log(TAG, "Exception caught: ", cause);
         game.showMainMenuWithError("Error", "Fatal error while trying to communicate with the server: \n" + cause.getMessage());
+        game.network().setConnected(false);
         dispose();
     }
 

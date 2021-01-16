@@ -8,9 +8,12 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import me.vrekt.oasis.network.codec.ServerProtocolPacketDecoder;
+import me.vrekt.oasis.network.states.ConnectionState;
 import protocol.Protocol;
 import protocol.channel.ClientChannels;
 import protocol.codec.ProtocolPacketEncoder;
+
+import java.util.function.Consumer;
 
 /**
  * Handles basic networking
@@ -50,6 +53,16 @@ public final class Network implements Disposable {
     private Connection connection;
 
     /**
+     * If connected
+     */
+    private boolean connected;
+
+    /**
+     * The consumer
+     */
+    private Consumer<ConnectionState> connectionStateConsumer;
+
+    /**
      * Initialize the bootstrap
      */
     public Network() {
@@ -71,6 +84,15 @@ public final class Network implements Disposable {
     }
 
     /**
+     * Set the connection state change consumer/listener
+     *
+     * @param consumer the consumer
+     */
+    public void onConnectionStateChange(Consumer<ConnectionState> consumer) {
+        this.connectionStateConsumer = consumer;
+    }
+
+    /**
      * Handle a new socket connection
      *
      * @param channel channel
@@ -78,10 +100,12 @@ public final class Network implements Disposable {
     private void handleSocketConnection(SocketChannel channel) {
         Protocol.initialize();
 
-        connection = new Connection(channel);
+        connection = new Connection(channel, connectionStateConsumer);
         channel.pipeline().addLast(new ServerProtocolPacketDecoder(connection));
         channel.pipeline().addLast(new ProtocolPacketEncoder());
         channel.pipeline().addLast(connection);
+
+        connectionStateConsumer.accept(ConnectionState.CONNECTED);
     }
 
     /**
@@ -92,6 +116,7 @@ public final class Network implements Disposable {
     public boolean connectToServer() {
         try {
             bootstrap.connect(MASTER_SERVER_IP, MASTER_SERVER_PORT).sync();
+            connected = true;
         } catch (Exception any) {
             Gdx.app.log(TAG, "Failed to connect to master server.", any);
             return false;
@@ -104,6 +129,22 @@ public final class Network implements Disposable {
      */
     public Connection connection() {
         return connection;
+    }
+
+    /**
+     * @return if connected
+     */
+    public boolean isConnected() {
+        return connected;
+    }
+
+    /**
+     * Set connected
+     *
+     * @param connected if connected
+     */
+    public void setConnected(boolean connected) {
+        this.connected = connected;
     }
 
     @Override

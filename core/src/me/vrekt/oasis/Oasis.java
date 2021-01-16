@@ -1,8 +1,8 @@
 package me.vrekt.oasis;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.utils.Disposable;
-import io.netty.util.ResourceLeakDetector;
 import me.vrekt.oasis.asset.GameAssets;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
 import me.vrekt.oasis.level.LevelManager;
@@ -26,9 +26,9 @@ public final class Oasis implements Disposable {
     public static final int GAME_VERSION = 10;
 
     /**
-     * The main menu
+     * The adapter
      */
-    private final MainMenu mainMenu;
+    private final OasisGameAdapter adapter;
 
     /**
      * The network handler.
@@ -51,18 +51,23 @@ public final class Oasis implements Disposable {
     private final GameAssets assets;
 
     /**
+     * Main menu
+     */
+    private final MainMenu mainMenu;
+
+    /**
      * Initialize the game
      */
     public Oasis(OasisGameAdapter adapter) {
-        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
         if (thisInstance != null) throw new UnsupportedOperationException();
         thisInstance = this;
+        this.adapter = adapter;
+
+        assets = new GameAssets();
 
         network = new Network();
         thePlayer = new LocalEntityPlayer();
         levelManager = new LevelManager();
-        assets = new GameAssets();
-
         mainMenu = new MainMenu();
         adapter.setScreen(mainMenu);
     }
@@ -113,31 +118,38 @@ public final class Oasis implements Disposable {
      * Show the main menu
      */
     public void showMainMenu() {
-        Gdx.app.postRunnable(() -> OasisGameAdapter.get().setScreen(mainMenu));
+        Gdx.app.postRunnable(() -> adapter.setScreen(mainMenu));
     }
 
     /**
-     * Show the main menu then execute a action
+     * Show the main menu with an error
      *
-     * @param after the after
+     * @param title   the title
+     * @param message the message
      */
-    private void showMainMenuThen(Runnable after) {
+    public void showMainMenuWithError(String title, String message) {
         Gdx.app.postRunnable(() -> {
-            if (OasisGameAdapter.get().getScreen() != mainMenu) {
-                OasisGameAdapter.get().setScreen(mainMenu);
-                after.run();
-            }
+            showMainMenu();
+            mainMenu.showDialog(title, message);
         });
     }
 
     /**
-     * Show an error
+     * Show a screen
      *
-     * @param title the title
-     * @param error the error
+     * @param screen the screen
      */
-    public void showMainMenuWithError(String title, String error) {
-        showMainMenuThen(() -> mainMenu.showDialog(title, error));
+    public void show(ScreenAdapter screen) {
+        Gdx.app.postRunnable(() -> OasisGameAdapter.get().setScreen(screen));
+    }
+
+    /**
+     * Show a screen
+     *
+     * @param adapter the adapter
+     */
+    public void showSync(ScreenAdapter adapter) {
+        OasisGameAdapter.get().setScreen(adapter);
     }
 
     @Override

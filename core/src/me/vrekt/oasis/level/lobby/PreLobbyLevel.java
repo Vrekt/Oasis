@@ -10,6 +10,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import me.vrekt.oasis.level.Level;
 import me.vrekt.oasis.level.world.LevelWorld;
 import protocol.packet.client.ClientLevelLoaded;
@@ -60,7 +61,7 @@ public final class PreLobbyLevel extends Level {
 
     @Override
     public void show() {
-        Gdx.app.log("PreLobby", "Showing pre-lobby");
+        Gdx.app.log("PreLobby", "Showing PreLobby");
         if (debugRenderer == null) debugRenderer = new Box2DDebugRenderer();
     }
 
@@ -80,6 +81,15 @@ public final class PreLobbyLevel extends Level {
 
             // disable inputs for this level
             thePlayer.disableInputs(Input.Keys.W, Input.Keys.S);
+
+            // add the lobby ID text.
+            final Label lobbyIdText = new Label("Lobby: " + thePlayer.lobbyIn(), skin);
+            root.add(lobbyIdText);
+
+            // position and add it.
+            root.top().right();
+            stage.clear();
+            stage.addActor(root);
 
             loaded = true;
             game.connection().send(new ClientLevelLoaded());
@@ -127,6 +137,8 @@ public final class PreLobbyLevel extends Level {
         camera.position.x = MathUtils.clamp(thePlayer.x(), WIDTH_HALVED, CAMERA_X_BOUNDS);
         camera.position.y = MathUtils.clamp(thePlayer.y(), HEIGHT_HALVED, CAMERA_Y_BOUNDS);
         camera.update();
+
+        stage.act(delta);
     }
 
     /**
@@ -144,6 +156,7 @@ public final class PreLobbyLevel extends Level {
         world.render(delta, batch);
         batch.end();
 
+        stage.draw();
         if (DO_DEBUG_RENDERING) debugRenderer.render(world.box2dWorld(), camera.combined);
     }
 
