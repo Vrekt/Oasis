@@ -25,7 +25,7 @@ Still working out what I want the game to be, but some of these elements:
 - [x] Better UI
 - [ ] Better error handling
 - [ ] Name tags
-- [ ] Better collision boxes
+- [x] Better collision boxes
 - [ ] Server Security
   - [ ] Packet spamming
   - [ ] Packets at wrong times
@@ -36,6 +36,7 @@ Still working out what I want the game to be, but some of these elements:
 - [ ] Server config
 - [x] Remove players collision
 - [ ] Add next stage of game
+- [ ] Fix weird stuttering issues
   
 # Whats planned
  - [ ] Playing levels with multiple people
