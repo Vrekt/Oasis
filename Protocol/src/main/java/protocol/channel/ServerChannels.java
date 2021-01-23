@@ -19,15 +19,15 @@ public enum ServerChannels {
     /**
      * NIO
      */
-    NIO(NioServerSocketChannel.class, (KQueue.isAvailable() || Epoll.isAvailable()) ? null : new NioEventLoopGroup()),
+    NIO(NioServerSocketChannel.class, (KQueue.isAvailable() || Epoll.isAvailable()) ? null : new NioEventLoopGroup(4)),
     /**
      * K-QUEUE
      */
-    KQUEUE(KQueueServerSocketChannel.class, KQueue.isAvailable() ? new KQueueEventLoopGroup() : null),
+    KQUEUE(KQueueServerSocketChannel.class, KQueue.isAvailable() ? new KQueueEventLoopGroup(4) : null),
     /**
      * E-POLL
      */
-    EPOLL(EpollServerSocketChannel.class, Epoll.isAvailable() ? new EpollEventLoopGroup() : null);
+    EPOLL(EpollServerSocketChannel.class, Epoll.isAvailable() ? new EpollEventLoopGroup(4) : null);
 
     /**
      * The channel

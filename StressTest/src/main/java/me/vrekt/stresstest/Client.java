@@ -16,7 +16,7 @@ public final class Client {
 
     public static void main(String[] args) throws InterruptedException {
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 500; i++) {
             new Client();
         }
 
@@ -24,7 +24,6 @@ public final class Client {
 
     private Client() {
         new Thread(() -> {
-            System.err.println("Starting ");
             final ClientChannels channelConfig = ClientChannels.get();
             final EventLoopGroup group = channelConfig.group();
             final Bootstrap bootstrap = new Bootstrap();
@@ -45,6 +44,7 @@ public final class Client {
                             ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                                 @Override
                                 public void channelActive(ChannelHandlerContext ctx) {
+                                    System.err.println("Con");
                                     ch.writeAndFlush(new ClientHandshake(10, Protocol.PROTOCOL_VERSION));
                                 }
 

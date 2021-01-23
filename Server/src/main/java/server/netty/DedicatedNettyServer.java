@@ -1,6 +1,7 @@
 package server.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -25,6 +26,11 @@ public class DedicatedNettyServer {
      */
     private final EventLoopGroup parent, child;
 
+    /**
+     * Encoder
+     */
+    private final ProtocolPacketEncoder encoder;
+
     public static void main(String[] args) throws InterruptedException {
         new DedicatedNettyServer().bind(args[0], Integer.parseInt(args[1]));
     }
@@ -41,6 +47,7 @@ public class DedicatedNettyServer {
 
         bootstrap.group(parent, child)
                 .channel(channels.channel())
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel channel) {
@@ -48,9 +55,11 @@ public class DedicatedNettyServer {
                     }
                 })
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
-                .childOption(ChannelOption.TCP_NODELAY, true);
+                .childOption(ChannelOption.TCP_NODELAY, true)
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
         Protocol.initialize();
+        encoder = new ProtocolPacketEncoder();
     }
 
     /**
@@ -62,7 +71,7 @@ public class DedicatedNettyServer {
         final PlayerNetworkSession session = new PlayerNetworkSession(channel);
 
         channel.pipeline().addLast(new ClientProtocolPacketDecoder(session));
-        channel.pipeline().addLast(new ProtocolPacketEncoder());
+        channel.pipeline().addLast(encoder);
         channel.pipeline().addLast(session);
     }
 

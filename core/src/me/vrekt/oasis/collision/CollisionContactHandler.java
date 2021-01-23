@@ -6,26 +6,16 @@ import me.vrekt.oasis.entity.player.EntityPlayer;
 /**
  * A basic collision handler for any world.
  */
-public final class CollisionHandler implements ContactListener {
+public final class CollisionContactHandler implements ContactListener {
 
     @Override
     public void beginContact(Contact contact) {
-        final Fixture fixtureA = contact.getFixtureA();
-        final Fixture fixtureB = contact.getFixtureB();
-
-        // process player collision
-        // ensure we are not colliding with another player
-        if (fixtureA.getUserData() instanceof EntityPlayer && !(fixtureB.getUserData() instanceof EntityPlayer))
-            ((EntityPlayer) fixtureA.getUserData()).startCollision(fixtureB);
+        // TODO
     }
 
     @Override
     public void endContact(Contact contact) {
-        final Fixture fixtureA = contact.getFixtureA();
-
-        // end player collision
-        if (fixtureA.getUserData() instanceof EntityPlayer)
-            ((EntityPlayer) fixtureA.getUserData()).endCollision();
+        // TODO
     }
 
     @Override

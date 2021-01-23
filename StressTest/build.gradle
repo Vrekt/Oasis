@@ -16,3 +16,10 @@ dependencies {
     compile group: 'com.badlogicgames.gdx', name: 'gdx', version: '1.9.13'
 
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'me.vrekt.stresstest.Client'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}

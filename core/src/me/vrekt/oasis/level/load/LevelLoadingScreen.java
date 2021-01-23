@@ -1,6 +1,7 @@
 package me.vrekt.oasis.level.load;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import me.vrekt.oasis.level.Level;
@@ -51,14 +52,10 @@ public final class LevelLoadingScreen extends MenuUserInterface {
     @Override
     public void show() {
         Gdx.app.log("Loading", "Showing loading screen for " + levelToLoad.levelName());
-
-        progressBar.setValue(progressBar.getValue() + 50.0f);
-        final boolean result = levelToLoad.load();
+        final boolean result = levelToLoad.load(f -> progressBar.setValue(Interpolation.linear.apply(progressBar.getValue(), f, Gdx.graphics.getDeltaTime())));
 
         if (result) {
-            progressBar.setValue(progressBar.getValue() + 25.0f);
             schedule(() -> {
-                progressBar.setValue(progressBar.getValue() + 25.0f);
                 game.show(levelToLoad);
                 this.dispose();
             }, FAKE_DELAY);

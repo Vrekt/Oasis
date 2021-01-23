@@ -1,15 +1,12 @@
 package me.vrekt.oasis.entity.player;
 
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import me.vrekt.oasis.Oasis;
-import me.vrekt.oasis.animation.AnimationController;
 import me.vrekt.oasis.asset.character.CharacterType;
-import me.vrekt.oasis.collision.CollisionObject;
 import me.vrekt.oasis.entity.Entity;
+import me.vrekt.oasis.entity.player.render.player.PlayerEntityRenderer;
 import me.vrekt.oasis.level.world.LevelWorld;
 
 /**
@@ -18,14 +15,31 @@ import me.vrekt.oasis.level.world.LevelWorld;
 public abstract class EntityPlayer extends Entity {
 
     /**
+     * Player scaling
+     */
+    public static final float PLAYER_SCALE = 1 / 32.0f;
+
+    /**
+     * Default player width (Ruff)
+     * Could be different depending on model/rotation
+     */
+    protected static final float DEFAULT_PLAYER_WIDTH = 24f;
+
+    /**
+     * Default player height (Ruff)
+     * Could be different depending on model/rotation
+     */
+    protected static final float DEFAULT_PLAYER_HEIGHT = 34f;
+
+    /**
      * The username of the player
      */
     protected String username;
 
     /**
-     * Controller
+     * Renderer
      */
-    protected AnimationController controller;
+    protected PlayerEntityRenderer renderer;
 
     /**
      * The world this player is in
@@ -41,11 +55,6 @@ public abstract class EntityPlayer extends Entity {
      * The lobby in
      */
     protected int lobbyIn;
-
-    /**
-     * If this player is colliding.
-     */
-    protected boolean colliding;
 
     /**
      * Initialize
@@ -112,57 +121,20 @@ public abstract class EntityPlayer extends Entity {
     }
 
     /**
-     * @return {@code true if the player is colliding}
-     */
-    public boolean colliding() {
-        return colliding;
-    }
-
-    /**
-     * Set colliding
-     *
-     * @param colliding colliding
-     */
-    public void colliding(boolean colliding) {
-        this.colliding = colliding;
-    }
-
-    /**
      * Create player animations
      */
-    public void createPlayerAnimations() {
-        controller = new AnimationController(Oasis.get().assets().getCharacter(characterType).get());
-    }
-
-    /**
-     * Start collision
-     *
-     * @param with with
-     */
-    public void startCollision(Fixture with) {
-        final CollisionObject object = (CollisionObject) with.getUserData();
-        switch (object.collisionType()) {
-            case INVISIBLE_WALL:
-                this.colliding = true;
-                break;
-            case PLAYER:
-                this.colliding = false;
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * End collision
-     */
-    public void endCollision() {
-        this.colliding = false;
+    public void createPlayerRenderer() {
+        renderer = new PlayerEntityRenderer(Oasis.get().assets().getCharacter(characterType).get());
     }
 
     @Override
     public void spawnEntityInWorld(LevelWorld world, float x, float y) {
         worldIn = world;
+
+        // set initial positions
+        previousPosition.set(x, y);
+        currentPosition.set(x, y);
+        interpolatedPosition.set(x, y);
 
         // default body def for all player types (network + local)
         final BodyDef definition = new BodyDef();
@@ -170,25 +142,21 @@ public abstract class EntityPlayer extends Entity {
         definition.fixedRotation = true;
         definition.position.set(x, y);
 
+        // create body and set the basic poly shape
         body = world.box2dWorld().createBody(definition);
-
-        // TODO: Need to fix this shape, idk how.
         final PolygonShape shape = new PolygonShape();
-        shape.setAsBox(24, 32, new Vector2(12, 12), 0f);
+        shape.setAsBox(DEFAULT_PLAYER_WIDTH / 2f * PLAYER_SCALE, DEFAULT_PLAYER_HEIGHT / 2f * PLAYER_SCALE);
 
         final FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.density = 1.0f;
         fixtureDef.shape = shape;
 
-        body.createFixture(fixtureDef).setUserData(this);
+        body.createFixture(fixtureDef);
         shape.dispose();
-
-        previous.set(x, y);
-        current.set(x, y);
     }
 
     @Override
     public void dispose() {
-        if (controller != null) controller.dispose();
+        if (renderer != null) renderer.dispose();
     }
 }

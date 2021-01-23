@@ -69,7 +69,7 @@ public final class Oasis implements Disposable {
         thePlayer = new LocalEntityPlayer();
         levelManager = new LevelManager();
         mainMenu = new MainMenu();
-        adapter.setScreen(mainMenu);
+        show(mainMenu);
     }
 
     /**

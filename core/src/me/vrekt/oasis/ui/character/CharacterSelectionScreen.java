@@ -69,7 +69,14 @@ public final class CharacterSelectionScreen extends MenuUserInterface {
 
         // continue and back buttons
         final TextButton continueButton = new TextButton("Continue", skin);
-        setClickListenerTo(continueButton, () -> callback.run());
+        setClickListenerTo(continueButton, () -> {
+            if (game.thePlayer().character() == null) {
+                showDialog("Pick a character", "You must pick a character first.");
+                return;
+            }
+
+            callback.run();
+        });
 
         final TextButton backButton = new TextButton("Back", skin);
         setClickListenerTo(backButton, game::showMainMenu);

@@ -1,6 +1,7 @@
 package protocol.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import protocol.packet.Packet;
@@ -8,6 +9,7 @@ import protocol.packet.Packet;
 /**
  * Encodes incoming packets then appends the length
  */
+@ChannelHandler.Sharable
 public final class ProtocolPacketEncoder extends MessageToByteEncoder<Packet> {
 
     @Override

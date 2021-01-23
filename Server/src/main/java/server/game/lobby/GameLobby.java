@@ -27,7 +27,7 @@ final class GameLobby implements Lobby {
     /**
      * Max packets to process per tick;
      */
-    private static final int MAX_PACKETS_PER_TICK = 50;
+    private static final int MAX_PACKETS_PER_TICK = 100;
 
     /**
      * The players in this lobby

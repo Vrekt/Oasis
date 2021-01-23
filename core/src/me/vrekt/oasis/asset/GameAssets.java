@@ -53,6 +53,7 @@ public final class GameAssets implements Disposable {
         manager.load("characters/healer_female/HealerFemale.atlas", TextureAtlas.class);
         manager.load("characters/healer_male/HealerMale.atlas", TextureAtlas.class);
         manager.load("player/nametag.png", Texture.class);
+        manager.load("ui/panel2.png", Texture.class);
 
         characters.put(CharacterType.ATHENA, () -> manager.get("characters/healer_female/HealerFemale.atlas"));
         characters.put(CharacterType.CRIMSON, () -> manager.get("characters/healer_male/HealerMale.atlas"));

@@ -26,7 +26,7 @@ public final class LocalEntityPlayer extends EntityPlayer {
     /**
      * The move speed
      */
-    private static final float MOVE_SPEED = 100;
+    private static final float MOVE_SPEED = 3f;
 
     /**
      * Last packet sends
@@ -51,6 +51,13 @@ public final class LocalEntityPlayer extends EntityPlayer {
     }
 
     /**
+     * @return the connection
+     */
+    public Connection connection() {
+        return connection;
+    }
+
+    /**
      * Set the connection
      *
      * @param connection the connection
@@ -62,24 +69,28 @@ public final class LocalEntityPlayer extends EntityPlayer {
     @Override
     public void update(float delta) {
         pollInput();
+        body.setLinearVelocity(velocity.x, velocity.y);
 
-        // update locations for interpolation
-        previous = current;
-        current = body.getPosition();
-
-        // the interpolated velocity for smoother movement
-        final float interpolatedVelocityX = velocity.x == 0.0f ? 0.0f : Interpolation.linear.apply(previous.x, current.x, delta) * velocity.x;
-        final float interpolatedVelocityY = velocity.y == 0.0f ? 0.0f : Interpolation.linear.apply(previous.y, current.y, delta) * velocity.y;
-
-        // update
-        controller.update(rotation, !velocity.isZero(), colliding);
-        body.setLinearVelocity(interpolatedVelocityX, interpolatedVelocityY);
-
-        // if colliding, we set our velocity to zero so the network syncs fine
-        // if we don't the players will get out of sync because the velocity will still be updated
-        // over the network even tho we aren't moving
-        if (colliding) velocity.setZero();
+        currentPosition.set(body.getPosition().x, body.getPosition().y);
+        renderer.update(rotation, !velocity.isZero());
         sendVelocityAndPosition();
+    }
+
+    /**
+     * Interpolate the position of this player
+     *
+     * @param alpha alpha
+     */
+    public void interpolate(float alpha) {
+        interpolatedPosition.x = Interpolation.linear.apply(previousPosition.x, currentPosition.x, alpha);
+        interpolatedPosition.y = Interpolation.linear.apply(previousPosition.y, currentPosition.y, alpha);
+    }
+
+    /**
+     * Invoked before updating the player
+     */
+    public void captureState() {
+        previousPosition.set(body.getPosition().x, body.getPosition().y);
     }
 
     /**
@@ -96,11 +107,11 @@ public final class LocalEntityPlayer extends EntityPlayer {
             rotation = Rotation.FACING_RIGHT;
         } else if (Gdx.input.isKeyPressed(Input.Keys.W)
                 && !isInputDisabled(Input.Keys.W)) {
-            velocity.set(0f, -MOVE_SPEED);
+            velocity.set(0f, MOVE_SPEED);
             rotation = Rotation.FACING_UP;
         } else if (Gdx.input.isKeyPressed(Input.Keys.S)
                 && !isInputDisabled(Input.Keys.S)) {
-            velocity.set(0f, MOVE_SPEED);
+            velocity.set(0f, -MOVE_SPEED);
             rotation = Rotation.FACING_DOWN;
         } else {
             velocity.set(0f, 0f);
@@ -118,14 +129,14 @@ public final class LocalEntityPlayer extends EntityPlayer {
         }
 
         if (now - lastPositionSend >= POSITION_SEND_RATE_MS) {
-            connection.send(new ClientPosition(rotation.ordinal(), current.x, current.y));
+            connection.send(new ClientPosition(rotation.ordinal(), interpolatedPosition.x, interpolatedPosition.y));
             lastPositionSend = now;
         }
     }
 
     @Override
     public void render(float delta, SpriteBatch batch) {
-        controller.render(delta, rotation, current, batch);
+        renderer.render(delta, interpolatedPosition, batch);
     }
 
     /**

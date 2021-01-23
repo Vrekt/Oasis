@@ -28,6 +28,12 @@ final class OasisGameServer implements Server {
     private final int maxLobbiesPerInstance = 100;
 
     /**
+     * Max amount of players per {@link OasisGameServer} instance
+     * {or} per dedicated server
+     */
+    private final int maxPlayersPerInstance = 250;
+
+    /**
      * Amount of lobbies per thread
      */
     private final int lobbiesPerThread = 25;
@@ -38,12 +44,6 @@ final class OasisGameServer implements Server {
     private final Map<Integer, Lobby> lobbies = new ConcurrentHashMap<>();
 
     /**
-     * Lobby ticking
-     * TODO: In future skipping ticks when behind
-     */
-    private final BlockingQueue<Runnable> lobbyTickTasks = new LinkedBlockingDeque<>();
-
-    /**
      * Executes tasks
      */
     private final ExecutorService service;
@@ -51,12 +51,12 @@ final class OasisGameServer implements Server {
     /**
      * The last lobby tick
      */
-    private long lobbyTickTime, lastLobbyTick;
+    private long lobbyTickTime;
 
     /**
      * The amount of ticks to skip.
      */
-    private int ticksToSkip;
+    private long ticksToSkip;
 
     /**
      * Running state
@@ -72,8 +72,6 @@ final class OasisGameServer implements Server {
 
     @Override
     public void start() {
-        lobbies.put(999, Lobby.createLobby(999));
-        lastLobbyTick = System.currentTimeMillis();
         lobbyTickTime = 0;
 
         service.execute(() -> {
@@ -83,12 +81,23 @@ final class OasisGameServer implements Server {
             while (running) {
                 try {
                     lobbyTick();
+
+                    // cap max ticks to skip to 50.
+                    final long time = lobbyTickTime / 50;
+                    ticksToSkip = time >= 50 ? 50 : time;
+
+                    if (ticksToSkip > 1) {
+                        LOGGER.atWarning().log("Running %s ms behind, skipping %d ticks", lobbyTickTime, ticksToSkip);
+                    }
+
                     if (ticksToSkip != 0) {
                         while (ticksToSkip > 0) {
                             ticksToSkip--;
                             lobbyTick();
                         }
+                        lobbyTickTime = System.currentTimeMillis();
                     }
+
                     waitUntilNextTick();
                 } catch (InterruptedException exception) {
                     exception.printStackTrace();
@@ -147,11 +156,6 @@ final class OasisGameServer implements Server {
      */
     private void lobbyTick() {
         final long now = System.currentTimeMillis();
-        if (lobbyTickTime >= 50) {
-            ticksToSkip += lobbyTickTime / 50 + 1;
-            LOGGER.atWarning().every(2).log("Running %s ms behind, skipping %d ticks", lastLobbyTick, ticksToSkip);
-        }
-
         lobbies.forEach((lobbyId, lobby) -> lobby.tick());
         lobbyTickTime = System.currentTimeMillis() - now;
     }

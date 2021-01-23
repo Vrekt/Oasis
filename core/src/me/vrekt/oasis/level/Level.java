@@ -1,5 +1,6 @@
 package me.vrekt.oasis.level;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -8,6 +9,8 @@ import com.badlogic.gdx.utils.Disposable;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
 import me.vrekt.oasis.level.world.LevelWorld;
 import me.vrekt.oasis.ui.types.InGameUserInterface;
+
+import java.util.function.Consumer;
 
 /**
  * Represents a level.
@@ -83,7 +86,7 @@ public abstract class Level extends InGameUserInterface implements Disposable {
      *
      * @return the result of loading.
      */
-    public abstract boolean load();
+    public abstract boolean load(Consumer<Float> loadingCallback);
 
     /**
      * Unload the level
@@ -91,10 +94,22 @@ public abstract class Level extends InGameUserInterface implements Disposable {
     public abstract void unload();
 
     /**
-     * @return if the level is loaded
+     * Log a message
+     *
+     * @param message message
      */
-    public boolean loaded() {
-        return loaded;
+    protected void log(String message) {
+        Gdx.app.log(levelName, message);
+    }
+
+    /**
+     * Log a message
+     *
+     * @param message message
+     * @param e       e
+     */
+    protected void log(String message, Exception e) {
+        Gdx.app.log(levelName, message, e);
     }
 
     @Override
@@ -109,5 +124,7 @@ public abstract class Level extends InGameUserInterface implements Disposable {
         renderer = null;
         tiledMap = null;
         batch = null;
+
+        super.dispose();
     }
 }

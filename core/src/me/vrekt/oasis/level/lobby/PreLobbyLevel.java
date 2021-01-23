@@ -1,54 +1,53 @@
 package me.vrekt.oasis.level.lobby;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
-import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import me.vrekt.oasis.level.Level;
 import me.vrekt.oasis.level.world.LevelWorld;
+import me.vrekt.oasis.utilities.CustomOrthoTiledMapRenderer;
 import protocol.packet.client.ClientLevelLoaded;
 
+import java.util.function.Consumer;
+
 /**
- * The level for the pre-game lobby.
+ * The pre-lobby level
  */
 public final class PreLobbyLevel extends Level {
 
     /**
-     * The scale of this level.
+     * Default scaling for this level
      */
-    private static final float SCALE = 2f;
+    private static final float SCALE = 1.0f / 16.0f;
 
     /**
-     * Width of screen halved by 2
+     * Width
+     * 25 meters or tiles
      */
-    private static final float WIDTH_HALVED = Gdx.graphics.getWidth() / 2f;
+    private static final float VIEWPORT_WIDTH = 25;
 
     /**
-     * Height of screen halved by 2
+     * Height
+     * 19 meters or tiles
      */
-    private static final float HEIGHT_HALVED = Gdx.graphics.getHeight() / 2f;
+    private static final float VIEWPORT_HEIGHT = 19;
 
     /**
-     * The max camera X bounds
+     * If render debug
      */
-    private static final float CAMERA_X_BOUNDS = 1024 - WIDTH_HALVED;
+    private static final boolean RENDER_DEBUG = false;
 
     /**
-     * The max camera Y bounds
+     * The camera position before interpolation
      */
-    private static final float CAMERA_Y_BOUNDS = 1024 - HEIGHT_HALVED;
-
-    /**
-     * If debug rendering should be done.
-     */
-    private static final boolean DO_DEBUG_RENDERING = false;
+    private final Vector3 cameraPosition = new Vector3();
 
     /**
      * Debug renderer
@@ -61,109 +60,91 @@ public final class PreLobbyLevel extends Level {
 
     @Override
     public void show() {
-        Gdx.app.log("PreLobby", "Showing PreLobby");
-        if (debugRenderer == null) debugRenderer = new Box2DDebugRenderer();
+        Gdx.app.log("Testing", "Showing level test");
     }
 
     @Override
-    public boolean load() {
-        final long now = System.currentTimeMillis();
-        Gdx.app.log("PreLobbyLevel", "Loading PreLobby");
-
+    public boolean load(Consumer<Float> loadingCallback) {
         try {
-            tiledMap = new TmxMapLoader().load("levels\\lobby\\Lobby.tmx");
-            renderer = new OrthogonalTiledMapRenderer(tiledMap, SCALE);
             batch = new SpriteBatch();
+            tiledMap = new TmxMapLoader().load("levels\\lobby\\Lobby.tmx");
+            renderer = new CustomOrthoTiledMapRenderer(tiledMap, SCALE, batch);
+            loadingCallback.accept(25.0f);
 
-            // create the new world and initialize the camera.
             world = new LevelWorld(tiledMap, SCALE);
-            initializeLevelCamera(world.spawn());
 
-            // disable inputs for this level
-            thePlayer.disableInputs(Input.Keys.W, Input.Keys.S);
+            camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+            camera.position.set(world.spawn().x, world.spawn().y, 0f);
+            camera.update();
 
-            // add the lobby ID text.
-            final Label lobbyIdText = new Label("Lobby: " + thePlayer.lobbyIn(), skin);
-            root.add(lobbyIdText);
+            loadingCallback.accept(25.0f);
 
-            // position and add it.
+            // add the FPS text label and lobby invite label
+            final Label lobbyTextLabel = new Label("Lobby: " + thePlayer.lobbyIn(), skin);
+            root.add(lobbyTextLabel);
+            root.row();
+            root.add(fpsTextLabel);
             root.top().right();
-            stage.clear();
-            stage.addActor(root);
 
-            loaded = true;
-            game.connection().send(new ClientLevelLoaded());
-            Gdx.app.log("PreLobbyLevel", "PreLobby loaded successfully, took " + (System.currentTimeMillis() - now) + " ms");
+            if (RENDER_DEBUG) debugRenderer = new Box2DDebugRenderer();
+
+            thePlayer.connection().send(new ClientLevelLoaded());
+            loadingCallback.accept(25.0f);
+            return true;
         } catch (Exception any) {
-            Gdx.app.log("PreLobbyLevel", "Failed to load!", any);
-            return false;
+            log("Failed to load level", any);
         }
-        return true;
+        return false;
     }
 
     @Override
     public void unload() {
-        thePlayer.enableInputs(Input.Keys.W, Input.Keys.S);
-        loaded = false;
-    }
 
-    /**
-     * Initialize the camera for this level
-     */
-    private void initializeLevelCamera(Vector2 location) {
-        camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.position.set(location.x, location.y, 0);
-        camera.update();
     }
 
     @Override
     public void render(float delta) {
+        world.update(delta);
+        update();
+        updateUi(delta);
+
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        update(delta);
-        draw(delta);
-    }
-
-    /**
-     * Update internal
-     *
-     * @param delta delta
-     */
-    private void update(float delta) {
-        world.update(delta);
-
-        // clamp camera position so it does not go out of bounds.
-        camera.position.x = MathUtils.clamp(thePlayer.x(), WIDTH_HALVED, CAMERA_X_BOUNDS);
-        camera.position.y = MathUtils.clamp(thePlayer.y(), HEIGHT_HALVED, CAMERA_Y_BOUNDS);
-        camera.update();
-
-        stage.act(delta);
-    }
-
-    /**
-     * Render internal
-     *
-     * @param delta delta
-     */
-    private void draw(float delta) {
-        renderer.setView(camera);
-        renderer.render();
-
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
+        draw();
         world.render(delta, batch);
         batch.end();
 
-        stage.draw();
-        if (DO_DEBUG_RENDERING) debugRenderer.render(world.box2dWorld(), camera.combined);
+        drawUi();
+
+        if (RENDER_DEBUG) debugRenderer.render(world.box2dWorld(), camera.combined);
     }
 
     @Override
-    public void dispose() {
-        if (debugRenderer != null) debugRenderer.dispose();
-        super.dispose();
+    public void resize(int width, int height) {
+
+    }
+
+    /**
+     * Update the camera position
+     */
+    private void update() {
+        // set to player interpolated position
+        // clamp the value so camera does not go out of bounds
+        cameraPosition.x = MathUtils.clamp(thePlayer.x(), VIEWPORT_WIDTH / 2f, 32 - VIEWPORT_WIDTH / 2f);
+        cameraPosition.y = MathUtils.clamp(thePlayer.y(), VIEWPORT_HEIGHT / 2f, 32 - VIEWPORT_HEIGHT / 2f);
+        // interpolate further
+        camera.position.interpolate(cameraPosition, 1.0f, Interpolation.linear);
+        // update
+        camera.update();
+    }
+
+    /**
+     * Draw the tiled map
+     */
+    private void draw() {
+        renderer.setView(camera);
+        renderer.render();
     }
 
 }

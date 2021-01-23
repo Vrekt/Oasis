@@ -1,18 +1,15 @@
 package me.vrekt.oasis.level.world;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Disposable;
 import me.vrekt.oasis.Oasis;
-import me.vrekt.oasis.collision.CollisionHandler;
-import me.vrekt.oasis.collision.CollisionObject;
-import me.vrekt.oasis.collision.CollisionType;
+import me.vrekt.oasis.collision.CollisionContactHandler;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
 import me.vrekt.oasis.entity.player.network.NetworkEntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
@@ -51,28 +48,28 @@ public final class LevelWorld implements Disposable {
     private final World world;
 
     /**
-     * The spawn location for players
+     * Spawn area
      */
     private final Vector2 spawn;
 
     /**
      * Accumulator
      */
-    private float worldStepAccumulator;
+    private float accumulator;
 
     /**
      * Creates a new world for a level
      *
      * @param map the map of the level
      */
-    public LevelWorld(TiledMap map, float mapScale) {
+    public LevelWorld(TiledMap map, float scale) {
         world = new World(new Vector2(0, 0), true);
-        world.setContactListener(new CollisionHandler());
-        thePlayer = Oasis.get().thePlayer();
+        world.setContactListener(new CollisionContactHandler());
 
-        spawn = retrieveSpawnArea(map, mapScale);
-        initializeLocalPlayerIn();
-        initializeCollision(map);
+        thePlayer = Oasis.get().thePlayer();
+        spawn = loadSpawn(map, scale);
+        loadCollision(map, scale);
+        initializeLocalPlayerIn(spawn);
     }
 
     /**
@@ -83,18 +80,87 @@ public final class LevelWorld implements Disposable {
     }
 
     /**
-     * @return the spawn area
+     * Initialize the local player
      */
-    public Vector2 spawn() {
-        return spawn;
+    private void initializeLocalPlayerIn(Vector2 spawn) {
+        thePlayer.createPlayerRenderer();
+        thePlayer.spawnEntityInWorld(this, spawn.x, spawn.y);
     }
 
     /**
-     * Initialize the local player
+     * Load the spawning area
+     *
+     * @param map   the map
+     * @param scale the scale
+     * @return the spawn area
      */
-    private void initializeLocalPlayerIn() {
-        thePlayer.createPlayerAnimations();
-        thePlayer.spawnEntityInWorld(this, spawn.x, spawn.y);
+    private Vector2 loadSpawn(TiledMap map, float scale) {
+        final RectangleMapObject spawnArea = (RectangleMapObject) map.getLayers()
+                .get("Triggers")
+                .getObjects()
+                .get("Spawn");
+
+        final Vector2 location = new Vector2(spawnArea.getRectangle().x, spawnArea.getRectangle().y);
+        return location.scl(scale);
+    }
+
+    /**
+     * Load collision for this world
+     *
+     * @param map   the map
+     * @param scale the scale
+     */
+    private void loadCollision(TiledMap map, float scale) {
+        map.getLayers()
+                .get("Collision")
+                .getObjects()
+                .getByType(TiledMapTileMapObject.class)
+                .forEach(object -> {
+                    final TextureRegion region = object.getTile().getTextureRegion();
+                    createStaticBody(object.getX(), object.getY(), region.getRegionWidth(), region.getRegionHeight(), scale);
+                });
+    }
+
+    /**
+     * Create a static body
+     *
+     * @param x      the x
+     * @param y      the y
+     * @param width  width
+     * @param height height
+     * @param scale  scale
+     */
+    private void createStaticBody(float x, float y, float width, float height, float scale) {
+        // scl
+        x = x * scale;
+        y = y * scale;
+        width = width * scale;
+        height = height * scale;
+
+        // default body def for all player types (network + local)
+        final BodyDef definition = new BodyDef();
+        definition.type = BodyDef.BodyType.StaticBody;
+        definition.fixedRotation = true;
+
+        // +1 to correct wrong position
+        definition.position.set(x + 1 - width / 2f, y + 1 - height / 2f);
+        final Body body = world.createBody(definition);
+        final PolygonShape shape = new PolygonShape();
+        shape.setAsBox(width / 2f, height / 2f);
+
+        final FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.density = 1.0f;
+        fixtureDef.shape = shape;
+
+        body.createFixture(fixtureDef);
+        shape.dispose();
+    }
+
+    /**
+     * @return the spawn vec
+     */
+    public Vector2 spawn() {
+        return spawn;
     }
 
     /**
@@ -115,7 +181,7 @@ public final class LevelWorld implements Disposable {
      */
     public void createPlayer(NetworkEntityPlayer player, float x, float y) {
         players.put(player.entityId(), player);
-        player.createPlayerAnimations();
+        player.createPlayerRenderer();
         player.spawnEntityInWorld(this, x, y);
     }
 
@@ -160,71 +226,25 @@ public final class LevelWorld implements Disposable {
     }
 
     /**
-     * Initialize collision for this world
-     *
-     * @param map the map
-     */
-    private void initializeCollision(TiledMap map) {
-        map.getLayers()
-                .get("Collision")
-                .getObjects()
-                .getByType(RectangleMapObject.class)
-                .forEach(rect -> {
-                    // create a static body for this object
-                    final BodyDef bodyDef = new BodyDef();
-                    bodyDef.type = BodyDef.BodyType.StaticBody;
-                    // scale by *2 for the scaled world size
-                    bodyDef.position.set(new Vector2(rect.getRectangle().x * 2, rect.getRectangle().y * 2));
-                    bodyDef.fixedRotation = true;
-
-                    // create a basic poly, that *roughly* matches the shape
-                    // TODO: The shapes from tiled don't match up :/
-                    final Body body = world.createBody(bodyDef);
-                    final PolygonShape shape = new PolygonShape();
-                    shape.setAsBox(rect.getRectangle().width, rect.getRectangle().height);
-
-                    // finally, create the fixture and set the type as a collision object
-                    body.createFixture(shape, 1.0f).setUserData(new CollisionObject(CollisionType.INVISIBLE_WALL));
-                    shape.dispose();
-                });
-    }
-
-    /**
-     * Retrieve the spawn area
-     *
-     * @param map      the map
-     * @param mapScale the scale of the map
-     * @return the spawn vector
-     */
-    private Vector2 retrieveSpawnArea(TiledMap map, float mapScale) {
-        // retrieve the spawn trigger for the map
-        final RectangleMapObject spawnTrigger = (RectangleMapObject) map.getLayers()
-                .get("Triggers")
-                .getObjects()
-                .get("Spawn");
-        return new Vector2(spawnTrigger.getRectangle().x * mapScale, spawnTrigger.getRectangle().y * mapScale);
-    }
-
-    /**
      * Update the world
      *
      * @param delta the delta
      */
     public void update(float delta) {
-        final float capped = Math.min(delta, MAX_FRAME_TIME);
-        worldStepAccumulator += capped;
+        accumulator += delta;
 
-        while (worldStepAccumulator >= DEFAULT_STEP) {
-            // update local player
+        thePlayer.captureState();
+        players.forEach((id, player) -> player.captureState());
+        while (accumulator >= DEFAULT_STEP) {
             thePlayer.update(delta);
-
-            // update networked players
             players.forEach((id, player) -> player.update(delta));
 
-            // step simulation
-            world.step(DEFAULT_STEP, 6, 3);
-            worldStepAccumulator -= DEFAULT_STEP;
+            world.step(DEFAULT_STEP, 8, 3);
+            accumulator -= DEFAULT_STEP;
         }
+
+        thePlayer.interpolate(accumulator / DEFAULT_STEP);
+        players.forEach((id, player) -> player.interpolate(accumulator / DEFAULT_STEP));
     }
 
     /**

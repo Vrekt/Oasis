@@ -2,7 +2,6 @@ package me.vrekt.oasis.entity.player.network;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.math.Vector2;
 import me.vrekt.oasis.asset.character.CharacterType;
 import me.vrekt.oasis.entity.player.EntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
@@ -11,11 +10,6 @@ import me.vrekt.oasis.entity.rotation.Rotation;
  * A MP entity player
  */
 public final class NetworkEntityPlayer extends EntityPlayer {
-
-    /**
-     * Velocity
-     */
-    private float velocityX, velocityY;
 
     /**
      * If position should be interpolated
@@ -49,8 +43,7 @@ public final class NetworkEntityPlayer extends EntityPlayer {
      */
     public void updateVelocity(float velocityX, float velocityY, Rotation rotation) {
         this.rotation = rotation;
-        this.velocityX = velocityX;
-        this.velocityY = velocityY;
+        velocity.set(velocityX, velocityY);
     }
 
     /**
@@ -62,7 +55,7 @@ public final class NetworkEntityPlayer extends EntityPlayer {
      */
     public void updatePosition(float x, float y, Rotation rotation) {
         this.rotation = rotation;
-        final float dst = current.dst2(x, y);
+        final float dst = currentPosition.dst2(x, y);
 
         // interpolate to pos if too far away (de sync)
         if (dst >= 10) {
@@ -72,31 +65,40 @@ public final class NetworkEntityPlayer extends EntityPlayer {
         }
     }
 
+    /**
+     * Capture current state
+     */
+    public void captureState() {
+        previousPosition.set(body.getPosition());
+    }
+
+    /**
+     * Interpolate the position of this player
+     *
+     * @param alpha alpha
+     */
+    public void interpolate(float alpha) {
+        interpolatedPosition.x = Interpolation.linear.apply(previousPosition.x, currentPosition.x, alpha);
+        interpolatedPosition.y = Interpolation.linear.apply(previousPosition.y, currentPosition.y, alpha);
+    }
+
     @Override
     public void update(float delta) {
-        // update locations for interpolation
-        previous = current;
-        current = body.getPosition().cpy();
-
         if (doPositionInterpolation) {
-            final Vector2 to = new Vector2(interpolateToX, interpolateToY);
-            current.interpolate(to, delta, Interpolation.linear);
+            interpolatedPosition.x = Interpolation.linear.apply(currentPosition.x, interpolateToX, 0.5f);
+            interpolatedPosition.y = Interpolation.linear.apply(currentPosition.y, interpolateToY, 0.5f);
             doPositionInterpolation = false;
             return;
         }
 
-        // the interpolated velocity for (hopefully) smooth movement
-        final float interpolatedVelocityX = velocityX == 0.0f ? 0.0f : Interpolation.linear.apply(previous.x, current.x, delta) * velocityX;
-        final float interpolatedVelocityY = velocityY == 0.0f ? 0.0f : Interpolation.linear.apply(previous.y, current.y, delta) * velocityY;
-
-        // update
-        controller.update(rotation, (velocityX != 0.0f || velocityY != 0.0f), false);
-        body.setLinearVelocity(interpolatedVelocityX, interpolatedVelocityY);
+        body.setLinearVelocity(velocity.x, velocity.y);
+        currentPosition.set(body.getPosition());
+        renderer.update(rotation, !velocity.isZero());
     }
 
     @Override
     public void render(float delta, SpriteBatch batch) {
-        controller.render(delta, rotation, current, batch);
+        renderer.render(delta, currentPosition, batch);
     }
 
 }

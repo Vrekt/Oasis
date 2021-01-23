@@ -11,6 +11,7 @@ import protocol.packet.client.ClientVelocity;
 import protocol.packet.handlers.ServerPacketHandler;
 import protocol.packet.server.*;
 
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -18,6 +19,8 @@ import java.util.concurrent.TimeUnit;
  * Handles packets from the server
  */
 public final class DefaultServerPacketHandler extends ChannelInboundHandlerAdapter implements ServerPacketHandler {
+
+    private static final Random random = new Random();
 
     private final Channel sendChannel;
 
@@ -28,17 +31,23 @@ public final class DefaultServerPacketHandler extends ChannelInboundHandlerAdapt
     @Override
     public void handleHandshakeReply(ServerHandshakeReply reply) {
         final String user = RandomStringUtils.randomAlphabetic(8);
-        System.err.println("Handshaking " + user);
-        sendChannel.writeAndFlush(new ClientJoinLobby(user, 999));
+
+        sendChannel.writeAndFlush(new ClientJoinLobby(user, 1, 4997));
+        // sendChannel.writeAndFlush(new ClientCreateLobby(user, 1));
     }
 
     @Override
     public void handleCreateLobbyReply(ServerCreateLobbyReply reply) {
-
+        System.err.println(reply.lobbyId());
     }
 
     @Override
     public void handleCreatePlayer(ServerCreatePlayer createPlayer) {
+
+    }
+
+    @Override
+    public void handleSpawnPlayer(ServerSpawnPlayer spawnPlayer) {
 
     }
 
@@ -57,8 +66,10 @@ public final class DefaultServerPacketHandler extends ChannelInboundHandlerAdapt
         sendChannel.writeAndFlush(new ClientLevelLoaded());
 
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
+          //  float randomx = (float) (0.0f + Math.random() * (800.0f - 0.0f));
+         //   float randomy = (float) (0.0f + Math.random() * (800.0f - 0.0f));
             sendChannel.writeAndFlush(new ClientVelocity(0.5f, 0.5f, 1));
-            sendChannel.writeAndFlush(new ClientPosition(1, 0, 0));
+            sendChannel.writeAndFlush(new ClientPosition(1, 0.0f,0.0f));
         }, 0, 150, TimeUnit.MILLISECONDS);
     }
 

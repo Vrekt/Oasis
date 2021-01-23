@@ -10,17 +10,11 @@ public class DesktopLauncher {
 
         config.width = 800;
         config.height = 600;
-        config.backgroundFPS = 0;
-        config.foregroundFPS = 0;
-        config.resizable = false;
         config.vSyncEnabled = false;
         config.title = "Oasis";
+        config.backgroundFPS = 0;
+        config.foregroundFPS = 0;
 
-        new LwjglApplication(new OasisGameAdapter() {
-            @Override
-            public void setFps(int fps) {
-                config.foregroundFPS = fps;
-            }
-        }, config);
+        new LwjglApplication(new OasisGameAdapter(), config);
     }
 }

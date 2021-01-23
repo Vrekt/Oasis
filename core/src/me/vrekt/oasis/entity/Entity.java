@@ -28,11 +28,12 @@ public abstract class Entity implements Disposable {
     protected Body body;
 
     /**
-     * Previous location
-     * Current location
-     * Current velocity
+     * The previous position
+     * The current position
+     * The interpolated position
+     * The velocity
      */
-    protected Vector2 previous = new Vector2(), current = new Vector2(), velocity = new Vector2();
+    protected final Vector2 previousPosition, currentPosition, interpolatedPosition, velocity;
 
     /**
      * Initialize this entity
@@ -41,6 +42,11 @@ public abstract class Entity implements Disposable {
      */
     public Entity(int entityId) {
         this.entityId = entityId;
+
+        previousPosition = new Vector2();
+        currentPosition = new Vector2();
+        interpolatedPosition = new Vector2();
+        velocity = new Vector2();
     }
 
     /**
@@ -87,14 +93,14 @@ public abstract class Entity implements Disposable {
      * @return X position
      */
     public float x() {
-        return current.x;
+        return interpolatedPosition.x;
     }
 
     /**
      * @return Y position
      */
     public float y() {
-        return current.y;
+        return interpolatedPosition.y;
     }
 
     /**
