@@ -21,8 +21,8 @@ Still working out what I want the game to be, but some of these elements:
 - [x] Lobby input codes, currently default is just 9999 for every client
 - [x] Sync player movements, you can see others move its just not synced
 - [x] Collision in lobby
-- [ ] UI Input validation
-- [ ] Better UI
+- [x] UI Input validation
+- [x] Better UI
 - [ ] Better error handling
 - [ ] Name tags
 - [ ] Better collision boxes
