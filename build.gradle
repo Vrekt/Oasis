@@ -48,7 +48,7 @@ project(":desktop") {
         api "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
-        
+        compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
     }
 }
 
@@ -59,6 +59,7 @@ project(":core") {
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+        compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         compile group: 'io.netty', name: 'netty-all', version: '4.1.48.Final'
         compile project(":Protocol")
     }

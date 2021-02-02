@@ -4,13 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.Disposable;
+import me.vrekt.oasis.Oasis;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
+import me.vrekt.oasis.level.load.LoadingProgressCallback;
 import me.vrekt.oasis.level.world.LevelWorld;
 import me.vrekt.oasis.ui.types.InGameUserInterface;
-
-import java.util.function.Consumer;
 
 /**
  * Represents a level.
@@ -64,7 +65,7 @@ public abstract class Level extends InGameUserInterface implements Disposable {
      */
     public Level(String levelName) {
         this.levelName = levelName;
-        thePlayer = game.thePlayer();
+        thePlayer = Oasis.get().thePlayer();
     }
 
     /**
@@ -84,14 +85,29 @@ public abstract class Level extends InGameUserInterface implements Disposable {
     /**
      * Load the level
      *
+     * @param progress the progress callback
      * @return the result of loading.
      */
-    public abstract boolean load(Consumer<Float> loadingCallback);
+    public abstract boolean load(LoadingProgressCallback progress);
 
     /**
      * Unload the level
      */
     public abstract void unload();
+
+    /**
+     * Load internal
+     *
+     * @param map     the map name
+     * @param scaling the scaling
+     */
+    protected void loadInternal(String map, float scaling) throws Exception {
+        batch = new SpriteBatch();
+        tiledMap = new TmxMapLoader().load(map);
+
+        renderer = new OrthogonalTiledMapRenderer(tiledMap, scaling, batch);
+        world = new LevelWorld(tiledMap, scaling);
+    }
 
     /**
      * Log a message

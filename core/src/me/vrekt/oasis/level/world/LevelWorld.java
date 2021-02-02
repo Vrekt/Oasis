@@ -1,10 +1,10 @@
 package me.vrekt.oasis.level.world;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.objects.PolygonMapObject;
+import com.badlogic.gdx.maps.objects.PolylineMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Disposable;
@@ -13,6 +13,7 @@ import me.vrekt.oasis.collision.CollisionContactHandler;
 import me.vrekt.oasis.entity.player.local.LocalEntityPlayer;
 import me.vrekt.oasis.entity.player.network.NetworkEntityPlayer;
 import me.vrekt.oasis.entity.rotation.Rotation;
+import me.vrekt.oasis.utilities.CollisionShapeCreator;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * Handles the world within the level
  */
 public final class LevelWorld implements Disposable {
+
+    /**
+     * Static body
+     */
+    private static final BodyDef STATIC_BODY = new BodyDef();
+
+    static {
+        STATIC_BODY.type = BodyDef.BodyType.StaticBody;
+    }
 
     /**
      * Default world step
@@ -63,7 +73,7 @@ public final class LevelWorld implements Disposable {
      * @param map the map of the level
      */
     public LevelWorld(TiledMap map, float scale) {
-        world = new World(new Vector2(0, 0), true);
+        world = new World(new Vector2(0, 0), false);
         world.setContactListener(new CollisionContactHandler());
 
         thePlayer = Oasis.get().thePlayer();
@@ -114,45 +124,27 @@ public final class LevelWorld implements Disposable {
         map.getLayers()
                 .get("Collision")
                 .getObjects()
-                .getByType(TiledMapTileMapObject.class)
-                .forEach(object -> {
-                    final TextureRegion region = object.getTile().getTextureRegion();
-                    createStaticBody(object.getX(), object.getY(), region.getRegionWidth(), region.getRegionHeight(), scale);
-                });
+                .forEach((object -> {
+                    if (object instanceof PolylineMapObject) {
+                        final ChainShape shape = CollisionShapeCreator.createPolylineShape((PolylineMapObject) object, scale);
+                        createStaticBody(shape);
+                    } else if (object instanceof PolygonMapObject) {
+                        final PolygonShape shape = CollisionShapeCreator.createPolygonShape((PolygonMapObject) object, scale);
+                        createStaticBody(shape);
+                    } else if (object instanceof RectangleMapObject) {
+                        final PolygonShape shape = CollisionShapeCreator.createPolygonShape((RectangleMapObject) object, scale);
+                        createStaticBody(shape);
+                    }
+                }));
     }
 
     /**
-     * Create a static body
+     * Create a static body from shape
      *
-     * @param x      the x
-     * @param y      the y
-     * @param width  width
-     * @param height height
-     * @param scale  scale
+     * @param shape the shape
      */
-    private void createStaticBody(float x, float y, float width, float height, float scale) {
-        // scl
-        x = x * scale;
-        y = y * scale;
-        width = width * scale;
-        height = height * scale;
-
-        // default body def for all player types (network + local)
-        final BodyDef definition = new BodyDef();
-        definition.type = BodyDef.BodyType.StaticBody;
-        definition.fixedRotation = true;
-
-        // +1 to correct wrong position
-        definition.position.set(x + 1 - width / 2f, y + 1 - height / 2f);
-        final Body body = world.createBody(definition);
-        final PolygonShape shape = new PolygonShape();
-        shape.setAsBox(width / 2f, height / 2f);
-
-        final FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.density = 1.0f;
-        fixtureDef.shape = shape;
-
-        body.createFixture(fixtureDef);
+    private void createStaticBody(Shape shape) {
+        world.createBody(STATIC_BODY).createFixture(shape, 1.0f);
         shape.dispose();
     }
 
@@ -228,23 +220,27 @@ public final class LevelWorld implements Disposable {
     /**
      * Update the world
      *
-     * @param delta the delta
+     * @param d delta time
      */
-    public void update(float delta) {
+    public void update(float d) {
+        final float delta = Math.min(d, MAX_FRAME_TIME);
         accumulator += delta;
 
-        thePlayer.captureState();
         players.forEach((id, player) -> player.captureState());
         while (accumulator >= DEFAULT_STEP) {
-            thePlayer.update(delta);
-            players.forEach((id, player) -> player.update(delta));
+            thePlayer.captureState();
 
             world.step(DEFAULT_STEP, 8, 3);
             accumulator -= DEFAULT_STEP;
         }
 
-        thePlayer.interpolate(accumulator / DEFAULT_STEP);
-        players.forEach((id, player) -> player.interpolate(accumulator / DEFAULT_STEP));
+        thePlayer.update(delta);
+        thePlayer.interpolate();
+
+        players.forEach((id, player) -> {
+            player.update(delta);
+            player.interpolate();
+        });
     }
 
     /**

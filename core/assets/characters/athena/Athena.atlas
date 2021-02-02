@@ -1,97 +1,97 @@
 
-HealerMale.png
-size: 64,256
+Athena.png
+size: 256, 32
 format: RGBA8888
-filter: Nearest,Nearest
+filter: Nearest, Nearest
 repeat: none
 display
   rotate: false
-  xy: 2, 218
-  size: 28, 34
-  orig: 28, 34
+  xy: 55, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: -1
 walking_down_idle
   rotate: false
-  xy: 2, 218
-  size: 28, 34
-  orig: 28, 34
+  xy: 55, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: -1
 walking_down
   rotate: false
-  xy: 32, 218
-  size: 28, 34
-  orig: 28, 34
+  xy: 145, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: 2
 walking_down
   rotate: false
-  xy: 2, 110
-  size: 26, 34
-  orig: 26, 34
+  xy: 163, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: 1
 walking_left
   rotate: false
-  xy: 32, 146
-  size: 24, 34
-  orig: 24, 34
+  xy: 1, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: 2
 walking_left
   rotate: false
-  xy: 2, 38
-  size: 24, 34
-  orig: 24, 34
+  xy: 109, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: 1
 walking_left_idle
   rotate: false
-  xy: 2, 2
-  size: 24, 34
-  orig: 24, 34
+  xy: 181, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: -1
 walking_right
   rotate: false
-  xy: 2, 74
-  size: 24, 34
-  orig: 24, 34
+  xy: 19, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: 2
 walking_right
   rotate: false
-  xy: 28, 74
-  size: 24, 34
-  orig: 24, 34
+  xy: 127, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: 1
 walking_right_idle
   rotate: false
-  xy: 30, 110
-  size: 24, 34
-  orig: 24, 34
+  xy: 37, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: -1
 walking_up
   rotate: false
-  xy: 2, 146
-  size: 28, 34
-  orig: 28, 34
-  offset: 0, 0
-  index: 2
-walking_up
-  rotate: false
-  xy: 32, 182
-  size: 26, 34
-  orig: 26, 34
+  xy: 91, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: 1
+walking_up
+  rotate: false
+  xy: 199, 1
+  size: 16, 18
+  orig: 16, 18
+  offset: 0, 0
+  index: 2
 walking_up_idle
   rotate: false
-  xy: 2, 182
-  size: 28, 34
-  orig: 28, 34
+  xy: 73, 1
+  size: 16, 18
+  orig: 16, 18
   offset: 0, 0
   index: -1

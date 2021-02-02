@@ -96,6 +96,10 @@ public abstract class Entity implements Disposable {
         return interpolatedPosition.x;
     }
 
+    public Vector2 currentPosition() {
+        return currentPosition;
+    }
+
     /**
      * @return Y position
      */

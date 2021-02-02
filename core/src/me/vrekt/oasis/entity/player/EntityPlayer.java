@@ -17,19 +17,19 @@ public abstract class EntityPlayer extends Entity {
     /**
      * Player scaling
      */
-    public static final float PLAYER_SCALE = 1 / 32.0f;
+    public static final float PLAYER_SCALE = 1 / 16.0f;
 
     /**
      * Default player width (Ruff)
      * Could be different depending on model/rotation
      */
-    protected static final float DEFAULT_PLAYER_WIDTH = 24f;
+    protected static final float DEFAULT_PLAYER_WIDTH = 16f;
 
     /**
      * Default player height (Ruff)
      * Could be different depending on model/rotation
      */
-    protected static final float DEFAULT_PLAYER_HEIGHT = 34f;
+    protected static final float DEFAULT_PLAYER_HEIGHT = 18f;
 
     /**
      * The username of the player
@@ -151,7 +151,8 @@ public abstract class EntityPlayer extends Entity {
         fixtureDef.density = 1.0f;
         fixtureDef.shape = shape;
 
-        body.createFixture(fixtureDef);
+        body.createFixture(fixtureDef)
+                .setUserData(this);
         shape.dispose();
     }
 

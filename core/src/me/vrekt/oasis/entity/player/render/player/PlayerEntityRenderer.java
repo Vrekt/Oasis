@@ -106,12 +106,11 @@ public final class PlayerEntityRenderer extends EntityRenderer {
             drawIdleState(location, batch);
         } else {
             // offset the player position to fit within the box2d bounds
-            final TextureRegion r = currentAnimation.getKeyFrame(animationTime);
-            batch.draw(r,
-                    location.x - (r.getRegionWidth() * EntityPlayer.PLAYER_SCALE) / 2f,
-                    location.y - (r.getRegionHeight() * EntityPlayer.PLAYER_SCALE) / 2f,
-                    (r.getRegionWidth() * EntityPlayer.PLAYER_SCALE),
-                    (r.getRegionHeight() * EntityPlayer.PLAYER_SCALE));
+            batch.draw(currentAnimation.getKeyFrame(animationTime),
+                    location.x - (16 * EntityPlayer.PLAYER_SCALE) / 2f,
+                    location.y - (18 * EntityPlayer.PLAYER_SCALE) / 2f,
+                    (16 * EntityPlayer.PLAYER_SCALE),
+                    (18 * EntityPlayer.PLAYER_SCALE));
             animationTime += delta;
         }
     }
@@ -125,10 +124,10 @@ public final class PlayerEntityRenderer extends EntityRenderer {
      */
     private void drawIdleState(Vector2 location, SpriteBatch batch) {
         batch.draw(currentIdleState,
-                location.x - (currentIdleState.getRegionWidth() * EntityPlayer.PLAYER_SCALE) / 2f,
-                location.y - (currentIdleState.getRegionHeight() * EntityPlayer.PLAYER_SCALE) / 2f,
-                (currentIdleState.getRegionWidth() * EntityPlayer.PLAYER_SCALE),
-                (currentIdleState.getRegionHeight() * EntityPlayer.PLAYER_SCALE));
+                location.x - (16 * EntityPlayer.PLAYER_SCALE) / 2f,
+                location.y - (18 * EntityPlayer.PLAYER_SCALE) / 2f,
+                (16 * EntityPlayer.PLAYER_SCALE),
+                (18 * EntityPlayer.PLAYER_SCALE));
     }
 
 

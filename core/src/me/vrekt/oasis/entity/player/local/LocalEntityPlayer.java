@@ -26,7 +26,7 @@ public final class LocalEntityPlayer extends EntityPlayer {
     /**
      * The move speed
      */
-    private static final float MOVE_SPEED = 3f;
+    private static final float MOVE_SPEED = 2.5f;
 
     /**
      * Last packet sends
@@ -78,12 +78,10 @@ public final class LocalEntityPlayer extends EntityPlayer {
 
     /**
      * Interpolate the position of this player
-     *
-     * @param alpha alpha
      */
-    public void interpolate(float alpha) {
-        interpolatedPosition.x = Interpolation.linear.apply(previousPosition.x, currentPosition.x, alpha);
-        interpolatedPosition.y = Interpolation.linear.apply(previousPosition.y, currentPosition.y, alpha);
+    public void interpolate() {
+        interpolatedPosition.x = Interpolation.linear.apply(previousPosition.x, currentPosition.x, 0.5f);
+        interpolatedPosition.y = Interpolation.linear.apply(previousPosition.y, currentPosition.y, 0.5f);
     }
 
     /**
@@ -97,6 +95,8 @@ public final class LocalEntityPlayer extends EntityPlayer {
      * Poll the input
      */
     private void pollInput() {
+        velocity.set(0f, 0f);
+
         if (Gdx.input.isKeyPressed(Input.Keys.A)
                 && !isInputDisabled(Input.Keys.A)) {
             velocity.set(-MOVE_SPEED, 0f);
@@ -113,8 +113,6 @@ public final class LocalEntityPlayer extends EntityPlayer {
                 && !isInputDisabled(Input.Keys.S)) {
             velocity.set(0f, -MOVE_SPEED);
             rotation = Rotation.FACING_DOWN;
-        } else {
-            velocity.set(0f, 0f);
         }
     }
 

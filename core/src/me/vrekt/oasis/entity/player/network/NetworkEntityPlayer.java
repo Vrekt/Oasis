@@ -74,12 +74,10 @@ public final class NetworkEntityPlayer extends EntityPlayer {
 
     /**
      * Interpolate the position of this player
-     *
-     * @param alpha alpha
      */
-    public void interpolate(float alpha) {
-        interpolatedPosition.x = Interpolation.linear.apply(previousPosition.x, currentPosition.x, alpha);
-        interpolatedPosition.y = Interpolation.linear.apply(previousPosition.y, currentPosition.y, alpha);
+    public void interpolate() {
+        interpolatedPosition.x = Interpolation.linear.apply(previousPosition.x, currentPosition.x, 0.5f);
+        interpolatedPosition.y = Interpolation.linear.apply(previousPosition.y, currentPosition.y, 0.5f);
     }
 
     @Override

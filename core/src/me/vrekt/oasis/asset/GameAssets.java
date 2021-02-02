@@ -2,7 +2,6 @@ package me.vrekt.oasis.asset;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -50,37 +49,15 @@ public final class GameAssets implements Disposable {
         defaultUiSkinAtlas = new TextureAtlas("ui/UserInterface.atlas");
         defaultUiSkin = new Skin(Gdx.files.internal("ui/UserInterface.json"), defaultUiSkinAtlas);
 
-        manager.load("characters/healer_female/HealerFemale.atlas", TextureAtlas.class);
-        manager.load("characters/healer_male/HealerMale.atlas", TextureAtlas.class);
-        manager.load("player/nametag.png", Texture.class);
-        manager.load("ui/panel2.png", Texture.class);
+        for (CharacterType characterType : CharacterType.values()) {
+            final String asset = characterType.assetPath();
+            manager.load(asset, TextureAtlas.class);
 
-        characters.put(CharacterType.ATHENA, () -> manager.get("characters/healer_female/HealerFemale.atlas"));
-        characters.put(CharacterType.CRIMSON, () -> manager.get("characters/healer_male/HealerMale.atlas"));
+            characters.put(characterType, () -> manager.get(asset));
+        }
 
         font = new BitmapFont(Gdx.files.internal("ui/UserInterfaceFont.fnt"), Gdx.files.internal("ui/UserInterfaceFont.png"), false);
-
         manager.finishLoading();
-    }
-
-    /**
-     * Get an atlas
-     *
-     * @param atlas the atlas
-     * @return the atlas
-     */
-    public TextureAtlas getAtlas(String atlas) {
-        return manager.get(atlas);
-    }
-
-    /**
-     * Get a texture
-     *
-     * @param texture the texture
-     * @return the texture
-     */
-    public Texture getTexture(String texture) {
-        return manager.get(texture);
     }
 
     /**

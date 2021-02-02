@@ -8,11 +8,7 @@ public enum CharacterType {
     /**
      * Healer female
      */
-    ATHENA("characters/healer_female/HealerFemale.atlas"),
-    /**
-     * Healer male
-     */
-    CRIMSON("characters/healer_male/HealerMale.atlas");
+    ATHENA("characters/athena/Athena.atlas");
 
     /**
      * The asset path of the character
