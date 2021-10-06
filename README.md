@@ -1,5 +1,20 @@
-# Oasis
-A multiplayer game using libGDX and Netty.
+
+# ARCHIVED
+
+Moved to: https://github.com/Vrekt/OasisGame
+
+# ARCHIVED
+
+Moved to: https://github.com/Vrekt/OasisGame
+
+# ARCHIVED
+
+Moved to: https://github.com/Vrekt/OasisGame
+
+# ARCHIVED
+
+Moved to: https://github.com/Vrekt/OasisGame
+
 
 # What is it
 Still working out what I want the game to be, but some of these elements:
